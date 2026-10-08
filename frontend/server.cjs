@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -10,8 +11,13 @@ app.get('/health', (req, res) => {
   });
 });
 
+app.use(express.static(path.join(__dirname, 'dist')));
+
 app.get('*', (req, res) => {
-  res.send(`<!DOCTYPE html>
+  const indexPath = path.join(__dirname, 'dist', 'index.html');
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      res.send(`<!DOCTYPE html>
 <html>
 <head>
   <title>Autonomous EV Charging System</title>
@@ -25,10 +31,12 @@ app.get('*', (req, res) => {
 <body>
   <div class="card">
     <h1>⚡ Autonomous EV Charging System</h1>
-    <p>Frontend SPA container running on port ${PORT}. Shell to be mounted in A-05.</p>
+    <p>Frontend SPA container running on port ${PORT}.</p>
   </div>
 </body>
 </html>`);
+    }
+  });
 });
 
 app.listen(PORT, () => {
