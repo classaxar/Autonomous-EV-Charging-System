@@ -7,7 +7,7 @@ async function listStations(req, res) {
   const stations = await Station.find({}).sort({ stationId: 1 });
   const formatted = stations.map((station) => ({
     ...station.toObject(),
-    availableChargers: station.availableChargers ?? calculateAvailableChargers(station.slots || [])
+    availableChargers: calculateAvailableChargers(station.slots || [])
   }));
   return success(res, formatted, 'Stations fetched');
 }
