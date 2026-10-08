@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const { connectDB } = require('./config/db');
 const { success, error } = require('./utils/envelope');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -25,8 +26,8 @@ app.get('/health', (req, res) => {
   return success(res, { service: SERVICE_NAME, status: 'UP' }, 'ok');
 });
 
-// Placeholder for service-specific routes
-// app.use('/api/...', routes);
+// Auth Routes per RULEBOOK Section 6
+app.use('/api/auth', authRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -41,6 +42,13 @@ app.use((err, req, res, next) => {
 
 async function startServer() {
   await connectDB();
+  try {
+    const { seedUsers } = require('./scripts/seed');
+    await seedUsers();
+  } catch (err) {
+    console.warn(`[Seed] Auto-seed skipped: ${err.message}`);
+  }
+
   const server = app.listen(PORT, () => {
     console.log(`[${SERVICE_NAME}] Listening on port ${PORT}`);
   });
