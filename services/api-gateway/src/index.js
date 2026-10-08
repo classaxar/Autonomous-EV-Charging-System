@@ -1,16 +1,20 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const { connectDB } = require('./config/db');
+const { createProxyMiddleware, fixRequestBody } = require('http-proxy-middleware');
+const { getProxyRoutes } = require('./config/proxy');
 const { success, error } = require('./utils/envelope');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 const SERVICE_NAME = process.env.SERVICE_NAME || 'api-gateway';
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// CORS Configuration per RULEBOOK Section 6
+const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:3000';
+app.use(cors({
+  origin: allowedOrigin,
+  credentials: true
+}));
 
 // Compact request logger (method path status)
 app.use((req, res, next) => {
@@ -25,10 +29,36 @@ app.get('/health', (req, res) => {
   return success(res, { service: SERVICE_NAME, status: 'UP' }, 'ok');
 });
 
-// Placeholder for service-specific routes
-// app.use('/api/...', routes);
+// Strictly block all /internal routes per RULEBOOK Section 5 and TASKBOOK A-04
+app.all('/internal*', (req, res) => {
+  return error(res, 'Route not found: internal routes cannot be accessed via API Gateway', 404);
+});
 
-// 404 handler
+// Proxy routes per RULEBOOK Section 6
+const routes = getProxyRoutes();
+for (const route of routes) {
+  app.use(
+    route.path,
+    createProxyMiddleware({
+      target: route.target,
+      changeOrigin: true,
+      on: {
+        proxyReq: fixRequestBody,
+        error: (err, req, res) => {
+          console.error(`[Gateway Proxy Error] ${req.method} ${req.originalUrl} -> ${route.target}: ${err.message}`);
+          if (!res.headersSent) {
+            return error(res, `Service unavailable: ${route.service} is not responding`, 503);
+          }
+        }
+      }
+    })
+  );
+}
+
+// Body parser for any local fallback routes
+app.use(express.json());
+
+// 404 handler for unknown routes
 app.use((req, res) => {
   return error(res, `Route not found: ${req.method} ${req.originalUrl}`, 404);
 });
@@ -40,7 +70,6 @@ app.use((err, req, res, next) => {
 });
 
 async function startServer() {
-  await connectDB();
   const server = app.listen(PORT, () => {
     console.log(`[${SERVICE_NAME}] Listening on port ${PORT}`);
   });
