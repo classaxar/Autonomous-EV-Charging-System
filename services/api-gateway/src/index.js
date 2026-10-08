@@ -16,6 +16,10 @@ app.use(cors({
   credentials: true
 }));
 
+// Rate limiter per TASKBOOK A-11 (100 req/min/IP)
+const { defaultRateLimiter } = require('./middleware/rateLimiter');
+app.use(defaultRateLimiter);
+
 // Compact request logger (method path status)
 app.use((req, res, next) => {
   res.on('finish', () => {
