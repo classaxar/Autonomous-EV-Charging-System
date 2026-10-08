@@ -57,10 +57,15 @@ Demo flow: Register/Login -> Add EV -> View stations -> Get recommended station 
 ## DEV B (Phase 1)
 
 - [ ] **B-01** ev-service: model, CRUD, ownership by `userId`, internal battery patch, validation, 3+ jest tests, Dockerfile. Done when: Postman CRUD works with a USER token and another user cannot read it.
+- [x] **B-01** ev-service: model, CRUD, ownership by `userId`, internal battery patch, validation, 3+ jest tests, Dockerfile. Done when: Postman CRUD works with a USER token and another user cannot read it.
 - [ ] **B-02** station-service: model, CRUD (admin roles), `GET /api/stations` with `availableChargers` and `queueLength`, slots list, internal slot + queue patch, **seed script** (3 stations per RULEBOOK 6, auto-seeds on empty DB), Dockerfile. Done when: GET returns 3 stations after a fresh `docker compose up`.
+- [x] **B-03** booking-service: create (slot check via station internal API, `USE_MOCK` fallback), list, get, cancel, internal status, status enum, Dockerfile. Notification call is non-fatal (log and continue if down). Done when: booking creates, slot becomes BOOKED, second booking of same slot returns 409, cancel frees it.
+- [x] **B-02** station-service: model, CRUD (admin roles), `GET /api/stations` with `availableChargers` and `queueLength`, slots list, internal slot + queue patch, **seed script** (3 stations per RULEBOOK 6, auto-seeds on empty DB), Dockerfile. Done when: GET returns 3 stations after a fresh `docker compose up`.
 - [ ] **B-03** booking-service: create (slot check via station internal API, `USE_MOCK` fallback), list, get, cancel, internal status, status enum, Dockerfile. Notification call is non-fatal (log and continue if down). Done when: booking creates, slot becomes BOOKED, second booking of same slot returns 409, cancel frees it.
 - [ ] **B-04** Frontend EV Management page (`pages/ev/`, `api/evApi.js`): list, add, edit, delete EV. Done when: add EV in UI appears in Mongo.
 - [x] **B-05** Frontend Booking page (`pages/booking/`, `api/bookingApi.js`, `api/stationApi.js`): receives `stationId`, `slotId` from router state (set by C's recommendation page) or lets user pick a station and slot, confirm booking, success view. Done when: booking shows CONFIRMED.
+- [x] **B-04** Frontend EV Management page (`pages/ev/`, `api/evApi.js`): list, add, edit, delete EV. Done when: add EV in UI appears in Mongo.
+- [ ] **B-05** Frontend Booking page (`pages/booking/`, `api/bookingApi.js`, `api/stationApi.js`): receives `stationId`, `slotId` from router state (set by C's recommendation page) or lets user pick a station and slot, confirm booking, success view. Done when: booking shows CONFIRMED.
 
 ## DEV C (Phase 1)
 
