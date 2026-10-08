@@ -130,7 +130,6 @@ node scripts/gen-token.js
 
 - **Authentication**: JWT `HS256`, Bearer header token on all `/api/*` endpoints except auth and `/health`.
 - **Internal Protection**: Header `x-internal-key` is required on all `/internal/*` routes. Never proxied through the API Gateway.
-- **Contract Reference**: See [contracts/api-contracts.md](contracts/api-contracts.md) for endpoint schemas.
-- **Architecture Details**: See [docs/architecture.md](docs/architecture.md).
-- **Git & PR Conventions**: See [docs/git-conventions.md](docs/git-conventions.md).
-- **Smoke Checklist**: See [docs/smoke-checklist.md](docs/smoke-checklist.md).
+- **Contract & Architecture Reference**: See `RULEBOOK.md` (Section 6) for endpoint schemas, and [docs/architecture.md](docs/architecture.md) for architecture.
+- **Rules of Engagement**: See `RULEBOOK.md` (Section 8) for Git conventions and PR requirements.
+- **Tasks & Milestones**: See `TASKBOOK.md` for current phase deliverables.
