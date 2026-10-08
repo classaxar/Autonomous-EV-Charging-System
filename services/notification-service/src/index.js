@@ -25,8 +25,9 @@ app.get('/health', (req, res) => {
   return success(res, { service: SERVICE_NAME, status: 'UP' }, 'ok');
 });
 
-// Placeholder for service-specific routes
-// app.use('/api/...', routes);
+// Notification Routes
+const notificationRoutes = require('./routes/notificationRoutes');
+app.use('/', notificationRoutes);
 
 // 404 handler
 app.use((req, res) => {
