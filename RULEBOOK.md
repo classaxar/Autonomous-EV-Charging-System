@@ -8,15 +8,15 @@ Binding for all 3 devs and all AI agents. Terse by design. If a rule conflicts w
 
 | Dev | Owns (write access) |
 |---|---|
-| **A** Platform | `api-gateway/` `auth-service/` `notification-service/` `docker-compose.yml` `kubernetes/` `.github/` `.gitignore` `README.md` `docs/architecture.md` `scripts/` (root) `_template/` `frontend/src/{App.jsx,main.jsx,api/client.js,context/,components/,pages/auth/,pages/dashboard/,pages/admin/}` |
-| **B** Core | `ev-service/` `station-service/` `booking-service/` `frontend/src/{pages/ev/,pages/booking/,pages/history/,components/ev/,components/booking/,api/evApi.js,api/stationApi.js,api/bookingApi.js}` |
-| **C** Intelligence | `decision-service/` `charging-service/` `payment-service/` `analytics-service/` `frontend/src/{pages/recommendation/,pages/charging/,pages/payment/,components/charging/,api/decisionApi.js,api/chargingApi.js,api/paymentApi.js}` |
+| **A** Platform | `services/api-gateway/` `services/auth-service/` `services/notification-service/` `docker-compose.yml` `infra/kubernetes/` `.github/` `.gitignore` `README.md` `docs/architecture.md` `scripts/` (root) `services/_template/` `frontend/src/{App.jsx,main.jsx,api/client.js,context/,components/,pages/auth/,pages/dashboard/,pages/admin/}` |
+| **B** Core | `services/ev-service/` `services/station-service/` `services/booking-service/` `frontend/src/{pages/ev/,pages/booking/,pages/history/,components/ev/,components/booking/,api/evApi.js,api/stationApi.js,api/bookingApi.js}` |
+| **C** Intelligence | `services/decision-service/` `services/charging-service/` `services/payment-service/` `services/analytics-service/` `frontend/src/{pages/recommendation/,pages/charging/,pages/payment/,components/charging/,api/decisionApi.js,api/chargingApi.js,api/paymentApi.js}` |
 
 Rules:
 - R1.1 Editing a path you do not own = PR rejected. No exceptions, no "tiny fixes".
 - R1.2 Need a change elsewhere? Open a GitHub issue: label `needs-A|B|C`, title `[from-X] what + why`. Owner does it.
-- R1.3 Shared root files (`docker-compose.yml`, `kubernetes/`, `.env.example`) are A only. B and C send env/port needs to A by issue; A's skeleton already contains every service.
-- R1.4 Dependency not ready? Use your own mock in `<your-service>/src/mocks/` behind `USE_MOCK=true`. Never edit the other service.
+- R1.3 Shared root files (`docker-compose.yml`, `infra/kubernetes/`, `.env.example`) are A only. B and C send env/port needs to A by issue; A's skeleton already contains every service.
+- R1.4 Dependency not ready? Use your own mock in `services/<your-service>/src/mocks/` behind `USE_MOCK=true`. Never edit the other service.
 - R1.5 `frontend/src/App.jsx` already routes to every page. B and C only replace the placeholder page file inside their own folder. Do not touch routes or nav.
 
 ---
@@ -25,20 +25,20 @@ Rules:
 
 | Service | Folder | Port | DB |
 |---|---|---|---|
-| gateway | api-gateway | 5000 | none |
-| auth | auth-service | 5001 | auth_db |
-| ev | ev-service | 5002 | ev_db |
-| station | station-service | 5003 | station_db |
-| booking | booking-service | 5004 | booking_db |
-| decision | decision-service | 5005 | none (stateless) |
-| charging | charging-service | 5006 | charging_db |
-| payment | payment-service | 5007 | payment_db |
-| notification | notification-service | 5008 | notification_db |
-| analytics | analytics-service | 5009 | analytics_db |
+| gateway | services/api-gateway | 5000 | none |
+| auth | services/auth-service | 5001 | auth_db |
+| ev | services/ev-service | 5002 | ev_db |
+| station | services/station-service | 5003 | station_db |
+| booking | services/booking-service | 5004 | booking_db |
+| decision | services/decision-service | 5005 | none (stateless) |
+| charging | services/charging-service | 5006 | charging_db |
+| payment | services/payment-service | 5007 | payment_db |
+| notification | services/notification-service | 5008 | notification_db |
+| analytics | services/analytics-service | 5009 | analytics_db |
 | frontend | frontend | 3000 | none |
 | mongodb | (image mongo:7) | 27017 | |
 
-Docker service name = folder name (e.g. `http://station-service:5003`). Inside Docker never use `localhost` between services.
+Docker service name = basename (e.g. `http://station-service:5003`). Inside Docker never use `localhost` between services.
 
 ---
 
@@ -48,13 +48,13 @@ Node 20, Express 4, Mongoose 8, `jsonwebtoken`, `bcryptjs`, `axios`, `cors`, `do
 
 ---
 
-## 4. SERVICE TEMPLATE (A creates `_template/`, everyone copies it)
+## 4. SERVICE TEMPLATE (A creates `services/_template/`, everyone copies it)
 
 ```
-<service>/
+services/<service>/
   src/index.js            # app + listen
   src/config/db.js
-  src/middleware/auth.js  # identical copy from _template (verifies JWT, sets req.user)
+  src/middleware/auth.js  # identical copy from services/_template (verifies JWT, sets req.user)
   src/middleware/internal.js  # checks header x-internal-key
   src/routes/ controllers/ models/ mocks/
   .env.example  .dockerignore  Dockerfile  package.json
@@ -204,7 +204,7 @@ Mongo URI pattern: `mongodb://mongodb:27017/<db>`; in Kubernetes it comes from C
 
 ## 10. KUBERNETES RULES (A only; others supply nothing)
 
-- Namespace `ev-system`. One file per service in `kubernetes/` plus `namespace.yaml`, `configmap.yaml`, `secret.yaml`, `mongodb.yaml`, `ingress.yaml`, `hpa.yaml`.
+- Namespace `ev-system`. One file per service in `infra/kubernetes/` plus `namespace.yaml`, `configmap.yaml`, `secret.yaml`, `mongodb.yaml`, `ingress.yaml`, `hpa.yaml`.
 - Every Deployment has: `replicas`, resource requests/limits, liveness and readiness probe on `GET /health`, env from ConfigMap/Secret.
 - Secrets: `secret.yaml` committed with dummy base64 values only, real ones are applied by hand.
 - HPA: decision-service (min 2, max 5, CPU 60%) and booking-service (min 2, max 4, CPU 70%).

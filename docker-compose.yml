@@ -1,0 +1,257 @@
+name: autonomous-ev-system
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - ev-network
+
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    restart: unless-stopped
+    ports:
+      - "${GATEWAY_PORT:-5000}:5000"
+    environment:
+      PORT: 5000
+      NODE_ENV: ${NODE_ENV:-development}
+      JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey_ev_2026_change_in_prod}
+      INTERNAL_KEY: ${INTERNAL_KEY:-internal_secret_key_2026_ev_system}
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:-http://auth-service:5001}
+      EV_SERVICE_URL: ${EV_SERVICE_URL:-http://ev-service:5002}
+      STATION_SERVICE_URL: ${STATION_SERVICE_URL:-http://station-service:5003}
+      BOOKING_SERVICE_URL: ${BOOKING_SERVICE_URL:-http://booking-service:5004}
+      DECISION_SERVICE_URL: ${DECISION_SERVICE_URL:-http://decision-service:5005}
+      CHARGING_SERVICE_URL: ${CHARGING_SERVICE_URL:-http://charging-service:5006}
+      PAYMENT_SERVICE_URL: ${PAYMENT_SERVICE_URL:-http://payment-service:5007}
+      NOTIFICATION_SERVICE_URL: ${NOTIFICATION_SERVICE_URL:-http://notification-service:5008}
+      ANALYTICS_SERVICE_URL: ${ANALYTICS_SERVICE_URL:-http://analytics-service:5009}
+    networks:
+      - ev-network
+
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    restart: unless-stopped
+    ports:
+      - "${AUTH_PORT:-5001}:5001"
+    environment:
+      PORT: 5001
+      NODE_ENV: ${NODE_ENV:-development}
+      MONGO_URI: mongodb://mongodb:27017/auth_db
+      JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey_ev_2026_change_in_prod}
+      INTERNAL_KEY: ${INTERNAL_KEY:-internal_secret_key_2026_ev_system}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - ev-network
+
+  ev-service:
+    build:
+      context: ./services/ev-service
+      dockerfile: Dockerfile
+    container_name: ev-service
+    restart: unless-stopped
+    ports:
+      - "${EV_PORT:-5002}:5002"
+    environment:
+      PORT: 5002
+      NODE_ENV: ${NODE_ENV:-development}
+      MONGO_URI: mongodb://mongodb:27017/ev_db
+      JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey_ev_2026_change_in_prod}
+      INTERNAL_KEY: ${INTERNAL_KEY:-internal_secret_key_2026_ev_system}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - ev-network
+
+  station-service:
+    build:
+      context: ./services/station-service
+      dockerfile: Dockerfile
+    container_name: station-service
+    restart: unless-stopped
+    ports:
+      - "${STATION_PORT:-5003}:5003"
+    environment:
+      PORT: 5003
+      NODE_ENV: ${NODE_ENV:-development}
+      MONGO_URI: mongodb://mongodb:27017/station_db
+      JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey_ev_2026_change_in_prod}
+      INTERNAL_KEY: ${INTERNAL_KEY:-internal_secret_key_2026_ev_system}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - ev-network
+
+  booking-service:
+    build:
+      context: ./services/booking-service
+      dockerfile: Dockerfile
+    container_name: booking-service
+    restart: unless-stopped
+    ports:
+      - "${BOOKING_PORT:-5004}:5004"
+    environment:
+      PORT: 5004
+      NODE_ENV: ${NODE_ENV:-development}
+      MONGO_URI: mongodb://mongodb:27017/booking_db
+      JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey_ev_2026_change_in_prod}
+      INTERNAL_KEY: ${INTERNAL_KEY:-internal_secret_key_2026_ev_system}
+      STATION_SERVICE_URL: ${STATION_SERVICE_URL:-http://station-service:5003}
+      NOTIFICATION_SERVICE_URL: ${NOTIFICATION_SERVICE_URL:-http://notification-service:5008}
+      USE_MOCK: ${USE_MOCK:-false}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - ev-network
+
+  decision-service:
+    build:
+      context: ./services/decision-service
+      dockerfile: Dockerfile
+    container_name: decision-service
+    restart: unless-stopped
+    ports:
+      - "${DECISION_PORT:-5005}:5005"
+    environment:
+      PORT: 5005
+      NODE_ENV: ${NODE_ENV:-development}
+      JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey_ev_2026_change_in_prod}
+      INTERNAL_KEY: ${INTERNAL_KEY:-internal_secret_key_2026_ev_system}
+      STATION_SERVICE_URL: ${STATION_SERVICE_URL:-http://station-service:5003}
+      USE_MOCK: ${USE_MOCK:-false}
+    networks:
+      - ev-network
+
+  charging-service:
+    build:
+      context: ./services/charging-service
+      dockerfile: Dockerfile
+    container_name: charging-service
+    restart: unless-stopped
+    ports:
+      - "${CHARGING_PORT:-5006}:5006"
+    environment:
+      PORT: 5006
+      NODE_ENV: ${NODE_ENV:-development}
+      MONGO_URI: mongodb://mongodb:27017/charging_db
+      JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey_ev_2026_change_in_prod}
+      INTERNAL_KEY: ${INTERNAL_KEY:-internal_secret_key_2026_ev_system}
+      SIM_SPEEDUP: ${SIM_SPEEDUP:-60}
+      BOOKING_SERVICE_URL: ${BOOKING_SERVICE_URL:-http://booking-service:5004}
+      STATION_SERVICE_URL: ${STATION_SERVICE_URL:-http://station-service:5003}
+      EV_SERVICE_URL: ${EV_SERVICE_URL:-http://ev-service:5002}
+      PAYMENT_SERVICE_URL: ${PAYMENT_SERVICE_URL:-http://payment-service:5007}
+      NOTIFICATION_SERVICE_URL: ${NOTIFICATION_SERVICE_URL:-http://notification-service:5008}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - ev-network
+
+  payment-service:
+    build:
+      context: ./services/payment-service
+      dockerfile: Dockerfile
+    container_name: payment-service
+    restart: unless-stopped
+    ports:
+      - "${PAYMENT_PORT:-5007}:5007"
+    environment:
+      PORT: 5007
+      NODE_ENV: ${NODE_ENV:-development}
+      MONGO_URI: mongodb://mongodb:27017/payment_db
+      JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey_ev_2026_change_in_prod}
+      INTERNAL_KEY: ${INTERNAL_KEY:-internal_secret_key_2026_ev_system}
+      NOTIFICATION_SERVICE_URL: ${NOTIFICATION_SERVICE_URL:-http://notification-service:5008}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - ev-network
+
+  notification-service:
+    build:
+      context: ./services/notification-service
+      dockerfile: Dockerfile
+    container_name: notification-service
+    restart: unless-stopped
+    ports:
+      - "${NOTIFICATION_PORT:-5008}:5008"
+    environment:
+      PORT: 5008
+      NODE_ENV: ${NODE_ENV:-development}
+      MONGO_URI: mongodb://mongodb:27017/notification_db
+      JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey_ev_2026_change_in_prod}
+      INTERNAL_KEY: ${INTERNAL_KEY:-internal_secret_key_2026_ev_system}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - ev-network
+
+  analytics-service:
+    build:
+      context: ./services/analytics-service
+      dockerfile: Dockerfile
+    container_name: analytics-service
+    restart: unless-stopped
+    ports:
+      - "${ANALYTICS_PORT:-5009}:5009"
+    environment:
+      PORT: 5009
+      NODE_ENV: ${NODE_ENV:-development}
+      MONGO_URI: mongodb://mongodb:27017/analytics_db
+      JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey_ev_2026_change_in_prod}
+      INTERNAL_KEY: ${INTERNAL_KEY:-internal_secret_key_2026_ev_system}
+      CHARGING_SERVICE_URL: ${CHARGING_SERVICE_URL:-http://charging-service:5006}
+      PAYMENT_SERVICE_URL: ${PAYMENT_SERVICE_URL:-http://payment-service:5007}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - ev-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      PORT: 3000
+      NODE_ENV: ${NODE_ENV:-development}
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:5000}
+    networks:
+      - ev-network
+
+volumes:
+  mongo-data:
+    driver: local
+
+networks:
+  ev-network:
+    driver: bridge
