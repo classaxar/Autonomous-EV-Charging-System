@@ -40,6 +40,7 @@ async function seedStationsIfNeeded() {
 
     const stationDocs = seedData.map((station) => ({
       ...station,
+      availableChargers: station.totalChargers,
       slots: buildSlots(station.totalChargers)
     }));
 
