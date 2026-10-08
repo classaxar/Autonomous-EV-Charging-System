@@ -50,9 +50,9 @@ Demo flow: Register/Login -> Add EV -> View stations -> Get recommended station 
 - [x] **A-02** `docker-compose.yml`. All 10 services + frontend + mongodb (`mongo:7`, `mongo-data` volume, healthcheck), env from root `.env`, depends_on healthy, one network. Done when: `docker compose up --build` brings every container up and each `/health` is 200.
 - [x] **A-03** auth-service per RULEBOOK 6 (register, login, profile, bcrypt, JWT, roles, seed script, 3+ jest tests). Done when: Postman register -> login -> profile works; token accepted by `services/_template` auth middleware.
 - [x] **A-04** api-gateway: proxy table from RULEBOOK 6, CORS, `/health`, blocks `/internal`, central error handler. Done when: `POST localhost:5000/api/auth/login` works and `/internal/*` returns 404.
-- [ ] **A-05** Frontend shell: Vite app in `frontend/`, router with ALL routes (`/login /register /dashboard /ev /recommend /booking /charging/:id /payment /history /admin`), placeholder pages inside the owner folders (`pages/ev/index.jsx`, etc. for B and C), `api/client.js`, auth context, protected route, navbar. Push this before B/C start frontend. Done when: `npm run dev` shows nav and every placeholder renders.
-- [ ] **A-06** Screens: Login, Register, Dashboard (battery, nearest station, available chargers, "Find Best Charger" button linking to `/recommend`). Done when: login stores token and redirects to dashboard.
-- [ ] **A-07** Demo script `scripts/demo.md` (step list for the 50% flow) + `docs/architecture.md` (diagram from the project concept) + frontend Dockerfile (nginx or `vite preview`). Merge `develop` -> `main`, tag `v0.5-demo`. Done when: a clean clone runs the full demo flow.
+- [x] **A-05** Frontend shell: Vite app in `frontend/`, router with ALL routes (`/login /register /dashboard /ev /recommend /booking /charging/:id /payment /history /admin`), placeholder pages inside the owner folders (`pages/ev/index.jsx`, etc. for B and C), `api/client.js`, auth context, protected route, navbar. Push this before B/C start frontend. Done when: `npm run dev` shows nav and every placeholder renders.
+- [x] **A-06** Screens: Login, Register, Dashboard (battery, nearest station, available chargers, "Find Best Charger" button linking to `/recommend`). Done when: login stores token and redirects to dashboard.
+- [x] **A-07** Demo script `scripts/demo.md` (step list for the 50% flow) + `docs/architecture.md` (diagram from the project concept) + frontend Dockerfile (nginx or `vite preview`). Merge `develop` -> `main`, tag `v0.5-demo`. Done when: a clean clone runs the full demo flow.
 
 ## DEV B (Phase 1)
 
@@ -83,14 +83,14 @@ Planned order: D1-D2 backend services, D3 frontend + Docker Hub, D4-D5 Kubernete
 
 ## DEV A (Phase 2)
 
-- [ ] **A-10** notification-service full: model, internal create, list own, mark read, 3+ tests. Done when: booking creation produces a notification visible via `GET /api/notifications`.
-- [ ] **A-11** Gateway hardening: rate limit (100 req/min/IP), role guard helper, request logging, graceful errors when upstream is down (503 envelope). Done when: stopping `ev-service` returns 503 JSON, not a crash.
-- [ ] **A-12** Frontend: notification bell + dropdown in navbar (poll every 10 s), Admin Dashboard page (`pages/admin/`) using `/api/analytics/*` and `/api/stations`: totals, daily sessions chart (simple SVG/CSS bars), most-used stations, revenue. Mock data until C-12 is merged. Done when: admin sees live numbers.
-- [ ] **A-13** Docker Hub: tag and push all 10 images + frontend as `v1.0`; `scripts/push-images.sh`; `docker-compose.prod.yml` using hub images. Done when: `docker compose -f docker-compose.prod.yml up` works on a machine with no source build.
-- [ ] **A-14** Kubernetes base (`infra/kubernetes/`): `namespace.yaml`, `configmap.yaml`, `secret.yaml` (dummy), `mongodb.yaml` (PVC + Deployment/StatefulSet + Service). Done when: `kubectl apply` creates namespace and Mongo is Running with a PVC bound.
-- [ ] **A-15** Kubernetes services: one file per service (Deployment: 2 replicas, requests/limits, liveness and readiness on `/health`, env from ConfigMap/Secret; ClusterIP Service), gateway as NodePort/LoadBalancer, frontend, `ingress.yaml`. Done when: all pods Ready and the UI works through Ingress or `minikube service`.
-- [ ] **A-16** `hpa.yaml` (decision-service, booking-service per RULEBOOK 10) + metrics-server instructions + `scripts/k8s-demo.md` (apply order, `kubectl get pods -w`, scale demo, rolling update demo, kill-a-pod self-heal demo). Done when: load test raises decision pods from 2 to >= 4.
-- [ ] **A-17** Docs: root `README.md` (overview, architecture diagram, run with Docker, run with K8s, env table, team and ownership) and `docs/architecture.md` final. Done when: a stranger can run the project from README alone.
+- [x] **A-10** notification-service full: model, internal create, list own, mark read, 3+ tests. Done when: booking creation produces a notification visible via `GET /api/notifications`.
+- [x] **A-11** Gateway hardening: rate limit (100 req/min/IP), role guard helper, request logging, graceful errors when upstream is down (503 envelope). Done when: stopping `ev-service` returns 503 JSON, not a crash.
+- [x] **A-12** Frontend: notification bell + dropdown in navbar (poll every 10 s), Admin Dashboard page (`pages/admin/`) using `/api/analytics/*` and `/api/stations`: totals, daily sessions chart (simple SVG/CSS bars), most-used stations, revenue. Mock data until C-12 is merged. Done when: admin sees live numbers.
+- [x] **A-13** Docker Hub: tag and push all 10 images + frontend as `v1.0`; `scripts/push-images.sh`; `docker-compose.prod.yml` using hub images. Done when: `docker compose -f docker-compose.prod.yml up` works on a machine with no source build.
+- [x] **A-14** Kubernetes base (`infra/kubernetes/`): `namespace.yaml`, `configmap.yaml`, `secret.yaml` (dummy), `mongodb.yaml` (PVC + Deployment/StatefulSet + Service). Done when: `kubectl apply` creates namespace and Mongo is Running with a PVC bound.
+- [x] **A-15** Kubernetes services: one file per service (Deployment: 2 replicas, requests/limits, liveness and readiness on `/health`, env from ConfigMap/Secret; ClusterIP Service), gateway as NodePort/LoadBalancer, frontend, `ingress.yaml`. Done when: all pods Ready and the UI works through Ingress or `minikube service`.
+- [x] **A-16** `hpa.yaml` (decision-service, booking-service per RULEBOOK 10) + metrics-server instructions + `scripts/k8s-demo.md` (apply order, `kubectl get pods -w`, scale demo, rolling update demo, kill-a-pod self-heal demo). Done when: load test raises decision pods from 2 to >= 4.
+- [x] **A-17** Docs: root `README.md` (overview, architecture diagram, run with Docker, run with K8s, env table, team and ownership) and `docs/architecture.md` final. Done when: a stranger can run the project from README alone.
 
 ## DEV B (Phase 2)
 
@@ -117,7 +117,7 @@ Planned order: D1-D2 backend services, D3 frontend + Docker Hub, D4-D5 Kubernete
 
 - [ ] **F-01** (A) Full regression: fresh clone -> Docker flow -> K8s flow, fix list as issues, assign to owners.
 - [ ] **F-02** (each dev) Fix assigned issues in own paths, one PR per fix.
-- [ ] **F-03** (A) PPT/report outline in `docs/presentation-outline.md`: problem, architecture, services per dev, decision algorithm, Docker, K8s, scaling demo, future ML. (B and C add their slides' bullets by issue comments; A compiles.)
+- [x] **F-03** (A) PPT/report outline in `docs/presentation-outline.md`: problem, architecture, services per dev, decision algorithm, Docker, K8s, scaling demo, future ML. (B and C add their slides' bullets by issue comments; A compiles.)
 - [ ] **F-04** (all) Viva rehearsal: each dev explains own services and the shared flow; practice `kubectl scale deployment decision-service --replicas=5`.
 - [ ] **F-05** (A) Merge `develop` -> `main`, tag `v1.0.0`, push images `v1.0`, final check of README.
 
