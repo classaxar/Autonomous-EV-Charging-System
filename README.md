@@ -6,7 +6,7 @@
 [![Express](https://img.shields.io/badge/Express-4.x-black?style=for-the-badge&logo=express)](https://expressjs.com)
 [![MongoDB](https://img.shields.io/badge/MongoDB-7.0-47A248?style=for-the-badge&logo=mongodb)](https://mongodb.com)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker)](https://docker.com)
-[![Kubernetes](https://img.shields.io/badge/Kubernetes-ev--system-326CE5?style=for-the-badge&logo=kubernetes)](kubernetes/)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-ev--system-326CE5?style=for-the-badge&logo=kubernetes)](infra/kubernetes/)
 [![React](https://img.shields.io/badge/Frontend-React%2018%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react)](frontend/)
 
 ---

@@ -1,4 +1,4 @@
-# AGENTS.md (copy the same content to CLAUDE.md for Claude Code)
+# AGENTS.md
 
 PROJECT: autonomous-ev-system | monorepo | Node20+Express+MongoDB+Docker+K8s | 10 services + React frontend | 3 devs (A, B, C)
 

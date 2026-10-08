@@ -48,13 +48,13 @@ Node 20, Express 4, Mongoose 8, `jsonwebtoken`, `bcryptjs`, `axios`, `cors`, `do
 
 ---
 
-## 4. SERVICE TEMPLATE (A creates `_template/`, everyone copies it)
+## 4. SERVICE TEMPLATE (A creates `services/_template/`, everyone copies it)
 
 ```
-<service>/
+services/<service>/
   src/index.js            # app + listen
   src/config/db.js
-  src/middleware/auth.js  # identical copy from _template (verifies JWT, sets req.user)
+  src/middleware/auth.js  # identical copy from services/_template (verifies JWT, sets req.user)
   src/middleware/internal.js  # checks header x-internal-key
   src/routes/ controllers/ models/ mocks/
   .env.example  .dockerignore  Dockerfile  package.json
