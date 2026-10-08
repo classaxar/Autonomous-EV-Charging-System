@@ -8,7 +8,7 @@ Tracking development of the Autonomous EV Charging System monorepo across Dev A 
 
 ### Dev A (Platform & Infra)
 - [x] **A-00** Repo bootstrap (`.gitignore`, `.github/PULL_REQUEST_TEMPLATE.md`, `README.md`, `AGENTS.md`, `RULEBOOK.md`, `TASKBOOK.md`, branch setup)
-- [x] **A-01** Skeleton (10 service directories from `_template/`, working `/health`, `gen-token.js`, root `.env.example`, docs & scripts)
+- [x] **A-01** Skeleton (10 service directories under `services/` from `_template/`, working `/health`, `gen-token.js`, root `.env.example`, docs & scripts)
 - [ ] **A-02** `docker-compose.yml` (all 10 services + frontend + mongodb with healthchecks & volume)
 - [ ] **A-03** `auth-service` (register, login, profile, bcrypt, JWT, roles, seed script, 3+ jest tests)
 - [ ] **A-04** `api-gateway` (routing table, CORS, error envelope, blocks `/internal`, /health)

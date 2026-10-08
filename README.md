@@ -78,16 +78,16 @@ flowchart TB
 
 | Service | Folder | Port | Database | Primary Owner | Description |
 |---|---|---|---|---|---|
-| **api-gateway** | `api-gateway/` | **5000** | *None* | **Dev A** (Platform) | Reverse proxy, central error envelope, blocks `/internal` |
-| **auth-service** | `auth-service/` | **5001** | `auth_db` | **Dev A** (Platform) | Registration, login, profile, password hashing, JWT tokens |
-| **ev-service** | `ev-service/` | **5002** | `ev_db` | **Dev B** (Core) | Vehicle registry, battery capacity, current state of charge |
-| **station-service** | `station-service/` | **5003** | `station_db` | **Dev B** (Core) | Station metadata, slot state (`FREE\|BOOKED\|CHARGING`), seed data |
-| **booking-service** | `booking-service/` | **5004** | `booking_db` | **Dev B** (Core) | Slot reservations, queue increments, cancellation lifecycle |
-| **decision-service** | `decision-service/` | **5005** | *None* | **Dev C** (Intel) | Stateless multi-criteria ranking algorithm (Haversine, price, speed) |
-| **charging-service** | `charging-service/` | **5006** | `charging_db` | **Dev C** (Intel) | Simulated charging sessions (`SIM_SPEEDUP`), battery ramp |
-| **payment-service** | `payment-service/` | **5007** | `payment_db` | **Dev C** (Intel) | Billing calculations (`energyKwh * price`), payment checkout |
-| **notification-service**| `notification-service/`| **5008** | `notification_db` | **Dev A** (Platform) | Real-time event notifications for users |
-| **analytics-service** | `analytics-service/` | **5009** | `analytics_db` | **Dev C** (Intel) | Admin operational intelligence & daily energy statistics |
+| **api-gateway** | `services/api-gateway/` | **5000** | *None* | **Dev A** (Platform) | Reverse proxy, central error envelope, blocks `/internal` |
+| **auth-service** | `services/auth-service/` | **5001** | `auth_db` | **Dev A** (Platform) | Registration, login, profile, password hashing, JWT tokens |
+| **ev-service** | `services/ev-service/` | **5002** | `ev_db` | **Dev B** (Core) | Vehicle registry, battery capacity, current state of charge |
+| **station-service** | `services/station-service/` | **5003** | `station_db` | **Dev B** (Core) | Station metadata, slot state (`FREE\|BOOKED\|CHARGING`), seed data |
+| **booking-service** | `services/booking-service/` | **5004** | `booking_db` | **Dev B** (Core) | Slot reservations, queue increments, cancellation lifecycle |
+| **decision-service** | `services/decision-service/` | **5005** | *None* | **Dev C** (Intel) | Stateless multi-criteria ranking algorithm (Haversine, price, speed) |
+| **charging-service** | `services/charging-service/` | **5006** | `charging_db` | **Dev C** (Intel) | Simulated charging sessions (`SIM_SPEEDUP`), battery ramp |
+| **payment-service** | `services/payment-service/` | **5007** | `payment_db` | **Dev C** (Intel) | Billing calculations (`energyKwh * price`), payment checkout |
+| **notification-service**| `services/notification-service/`| **5008** | `notification_db` | **Dev A** (Platform) | Real-time event notifications for users |
+| **analytics-service** | `services/analytics-service/` | **5009** | `analytics_db` | **Dev C** (Intel) | Admin operational intelligence & daily energy statistics |
 | **frontend** | `frontend/` | **3000** | *None* | Shared | React 18 + Vite SPA |
 
 ---

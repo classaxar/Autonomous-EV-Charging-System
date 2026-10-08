@@ -79,16 +79,16 @@ flowchart TB
 
 | Service | Folder | Port | Database | Ownership |
 |---|---|---|---|---|
-| **API Gateway** | `api-gateway/` | 5000 | *none* | Dev A |
-| **Auth Service** | `auth-service/` | 5001 | `auth_db` | Dev A |
-| **EV Service** | `ev-service/` | 5002 | `ev_db` | Dev B |
-| **Station Service** | `station-service/` | 5003 | `station_db` | Dev B |
-| **Booking Service** | `booking-service/` | 5004 | `booking_db` | Dev B |
-| **Decision Service** | `decision-service/` | 5005 | *none (stateless)* | Dev C |
-| **Charging Service** | `charging-service/` | 5006 | `charging_db` | Dev C |
-| **Payment Service** | `payment-service/` | 5007 | `payment_db` | Dev C |
-| **Notification Service** | `notification-service/` | 5008 | `notification_db` | Dev A |
-| **Analytics Service** | `analytics-service/` | 5009 | `analytics_db` | Dev C |
+| **API Gateway** | `services/api-gateway/` | 5000 | *none* | Dev A |
+| **Auth Service** | `services/auth-service/` | 5001 | `auth_db` | Dev A |
+| **EV Service** | `services/ev-service/` | 5002 | `ev_db` | Dev B |
+| **Station Service** | `services/station-service/` | 5003 | `station_db` | Dev B |
+| **Booking Service** | `services/booking-service/` | 5004 | `booking_db` | Dev B |
+| **Decision Service** | `services/decision-service/` | 5005 | *none (stateless)* | Dev C |
+| **Charging Service** | `services/charging-service/` | 5006 | `charging_db` | Dev C |
+| **Payment Service** | `services/payment-service/` | 5007 | `payment_db` | Dev C |
+| **Notification Service** | `services/notification-service/` | 5008 | `notification_db` | Dev A |
+| **Analytics Service** | `services/analytics-service/` | 5009 | `analytics_db` | Dev C |
 | **Frontend SPA** | `frontend/` | 3000 | *none* | Dev A (Shell), B, C (Pages) |
 | **MongoDB** | Container | 27017 | Database server | Shared Infra |
 
