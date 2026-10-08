@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const { connectDB } = require('./config/db');
 const { success, error } = require('./utils/envelope');
+const evRoutes = require('./routes/evRoutes');
+const { requireInternalKey } = require('./middleware/internal');
 
 const app = express();
 const PORT = process.env.PORT || 5002;
@@ -25,8 +27,8 @@ app.get('/health', (req, res) => {
   return success(res, { service: SERVICE_NAME, status: 'UP' }, 'ok');
 });
 
-// Placeholder for service-specific routes
-// app.use('/api/...', routes);
+app.use('/api/ev', evRoutes);
+app.use('/internal/ev', requireInternalKey, evRoutes.internalRouter);
 
 // 404 handler
 app.use((req, res) => {
