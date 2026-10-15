@@ -8,7 +8,16 @@ const paymentSchema = new mongoose.Schema({
   energyKwh: { type: Number, required: true, min: 0 },
   pricePerKwh: { type: Number, required: true, min: 0 },
   amount: { type: Number, required: true, min: 0 },
-  status: { type: String, enum: ['PENDING', 'PAID', 'FAILED'], default: 'PENDING' }
+  status: { type: String, enum: ['PENDING', 'PAID', 'FAILED'], default: 'PENDING' },
+  paymentMethod: { type: String, default: 'UPI' },
+  transactionRef: { type: String },
+  baseAmount: { type: Number },
+  cgst: { type: Number },
+  sgst: { type: Number },
+  gstRate: { type: String, default: '18%' },
+  gstin: { type: String, default: '27AABCE1234F1Z5' },
+  payerDetails: { type: String },
+  paidAt: { type: Date }
 }, { timestamps: { createdAt: true, updatedAt: false } });
 
 module.exports = mongoose.model('Payment', paymentSchema);

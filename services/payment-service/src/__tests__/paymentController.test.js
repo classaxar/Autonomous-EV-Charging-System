@@ -4,7 +4,7 @@ jest.mock('../models/Payment', () => ({
 }));
 
 const Payment = require('../models/Payment');
-const { createPayment } = require('../controllers/paymentController');
+const { createPayment, pay } = require('../controllers/paymentController');
 
 function response() {
   return { status: jest.fn().mockReturnThis(), json: jest.fn() };
@@ -35,4 +35,35 @@ test('returns the existing payment for a duplicate session', async () => {
 
   expect(Payment.create).not.toHaveBeenCalled();
   expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ data: payment, message: 'Payment already exists' }));
+});
+
+test('settles payment via Indian Rupee payment method (UPI / RuPay)', async () => {
+  const mockPaymentDoc = {
+    paymentId: 'PAY-100',
+    userId: 'U1',
+    amount: 354,
+    status: 'PENDING',
+    save: jest.fn().mockResolvedValue(true)
+  };
+  Payment.findOne.mockResolvedValue(mockPaymentDoc);
+  const res = response();
+
+  await pay({
+    params: { id: 'PAY-100' },
+    user: { userId: 'U1' },
+    body: {
+      paymentMethod: 'UPI',
+      transactionRef: 'UTR-20261015-883391',
+      baseAmount: 300,
+      cgst: 27,
+      sgst: 27,
+      payerDetails: 'driver@okhdfcbank'
+    }
+  }, res);
+
+  expect(mockPaymentDoc.status).toBe('PAID');
+  expect(mockPaymentDoc.paymentMethod).toBe('UPI');
+  expect(mockPaymentDoc.transactionRef).toBe('UTR-20261015-883391');
+  expect(mockPaymentDoc.save).toHaveBeenCalled();
+  expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ message: 'Payment paid' }));
 });

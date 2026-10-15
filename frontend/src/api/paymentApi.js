@@ -28,9 +28,10 @@ export async function getPayments() {
  * Triggers the payment gateway and updates the invoice status to `PAID`.
  *
  * @param {string} paymentId - ID of the payment to settle.
+ * @param {Object} [paymentData] - Payment method details, tax breakdown, and transaction reference.
  * @returns {Promise<Payment>} The updated payment record with status `PAID`.
- * @throws {import('axios').AxiosError} On network or server error (e.g. 404 Not Found, 402 Payment Required).
+ * @throws {import('axios').AxiosError} On network or server error.
  */
-export async function payPayment(paymentId) {
-  return (await client.patch(`/api/payments/${paymentId}/pay`)).data.data;
+export async function payPayment(paymentId, paymentData = {}) {
+  return (await client.patch(`/api/payments/${paymentId}/pay`, paymentData)).data.data;
 }

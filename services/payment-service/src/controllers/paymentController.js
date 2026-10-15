@@ -47,9 +47,19 @@ async function pay(req, res) {
   const payment = await Payment.findOne({ paymentId: req.params.id, userId: req.user.userId });
   if (!payment) return error(res, 'Payment not found', 404);
   if (payment.status === 'PAID') return success(res, payment, 'Payment already paid');
+  
+  const { paymentMethod, transactionRef, baseAmount, cgst, sgst, payerDetails } = req.body || {};
   payment.status = 'PAID';
+  payment.paymentMethod = paymentMethod || 'UPI';
+  payment.transactionRef = transactionRef || `UTR${Date.now()}`;
+  payment.paidAt = new Date();
+  if (baseAmount !== undefined) payment.baseAmount = Number(baseAmount);
+  if (cgst !== undefined) payment.cgst = Number(cgst);
+  if (sgst !== undefined) payment.sgst = Number(sgst);
+  if (payerDetails) payment.payerDetails = String(payerDetails);
+
   await payment.save();
-  await notify(payment.userId, 'PAYMENT_SUCCESS', `Payment ${payment.paymentId} completed.`);
+  await notify(payment.userId, 'PAYMENT_SUCCESS', `Payment ${payment.paymentId} of ₹${payment.amount} completed via ${payment.paymentMethod}. Ref: ${payment.transactionRef}`);
   return success(res, payment, 'Payment paid');
 }
 
