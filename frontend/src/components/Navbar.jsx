@@ -45,7 +45,7 @@ export default function Navbar() {
   const navLinks = [
     { to: '/dashboard', label: 'Overview' },
     { to: '/ev', label: 'Vehicles' },
-    { to: '/recommend', label: 'Find a charger' },
+    { to: '/recommend', label: 'Route & Leisure' },
     { to: '/booking', label: 'Bookings' },
     { to: '/history', label: 'Activity' }
   ];

@@ -2,6 +2,8 @@ const axios = require('axios');
 const { authenticate } = require('../middleware/auth');
 const { success, error } = require('../utils/envelope');
 const { scoreStations } = require('../engine/score');
+const { scoreCorridorStations } = require('../engine/corridorScore');
+const { touristSpots, findNearbyTouristSpot } = require('../data/touristSpots');
 const mockStations = require('../mocks/stations');
 
 const requiredFields = [
@@ -44,15 +46,49 @@ function validateRequest(body) {
   return null;
 }
 
+function validateCorridorRequest(body) {
+  if (!body.origin || !Number.isFinite(Number(body.origin.latitude)) || !Number.isFinite(Number(body.origin.longitude))) {
+    return 'origin with valid latitude and longitude is required';
+  }
+  if (!body.destination || !Number.isFinite(Number(body.destination.latitude)) || !Number.isFinite(Number(body.destination.longitude))) {
+    return 'destination with valid latitude and longitude is required';
+  }
+  if (body.currentBattery !== undefined) {
+    const cb = Number(body.currentBattery);
+    if (isNaN(cb) || cb < 0 || cb > 100) {
+      return 'currentBattery must be between 0 and 100';
+    }
+  }
+  if (body.targetBattery !== undefined) {
+    const tb = Number(body.targetBattery);
+    if (isNaN(tb) || tb < 0 || tb > 100) {
+      return 'targetBattery must be between 0 and 100';
+    }
+  }
+  return null;
+}
+
 async function getStations(req) {
   if (process.env.USE_MOCK === 'true') {
     return mockStations;
   }
-  const response = await axios.get(`${process.env.STATION_SERVICE_URL}/api/stations`, {
-    headers: { Authorization: req.headers.authorization },
-    timeout: 5000
-  });
-  return response.data.data;
+  try {
+    const response = await axios.get(`${process.env.STATION_SERVICE_URL}/api/stations`, {
+      headers: { Authorization: req.headers.authorization },
+      timeout: 5000
+    });
+    const fetched = response.data.data;
+    if (Array.isArray(fetched) && fetched.length > 0) {
+      const fetchedIds = new Set(fetched.map((s) => s.stationId));
+      const extras = mockStations.filter((s) => !fetchedIds.has(s.stationId));
+      return [...fetched, ...extras];
+    }
+    return mockStations;
+  } catch (err) {
+    // If station service has no DB records yet or is unreachable, fallback to mock stations gracefully
+    console.warn(`[Decision] Falling back to mock stations: ${err.message}`);
+    return mockStations;
+  }
 }
 
 async function recommend(req, res) {
@@ -82,10 +118,55 @@ async function recommend(req, res) {
   }
 }
 
+/**
+ * Route corridor & leisure-aware charging recommendation
+ */
+async function corridorRecommend(req, res) {
+  const validationError = validateCorridorRequest(req.body);
+  if (validationError) {
+    return error(res, validationError, 400);
+  }
+
+  try {
+    const stations = await getStations(req);
+    const result = scoreCorridorStations(req.body, Array.isArray(stations) ? stations : []);
+
+    return success(res, result);
+  } catch (requestError) {
+    console.error(`[Decision] Corridor recommendation failed: ${requestError.message}`);
+    return error(res, 'Unable to compute corridor recommendation', 500);
+  }
+}
+
+/**
+ * Returns available tourist spots, optionally filtered by proximity
+ */
+function getTouristSpotsList(req, res) {
+  const { latitude, longitude, radiusKm } = req.query;
+
+  if (latitude && longitude) {
+    const lat = Number(latitude);
+    const lon = Number(longitude);
+    const rad = Number(radiusKm || 20);
+    const spot = findNearbyTouristSpot({ latitude: lat, longitude: lon }, rad);
+    return success(res, spot ? [spot] : []);
+  }
+
+  return success(res, touristSpots);
+}
+
+const router = require('express').Router();
+router.post('/recommend', authenticate, recommend);
+router.post('/corridor-recommend', authenticate, corridorRecommend);
+router.get('/tourist-spots', authenticate, getTouristSpotsList);
+
 module.exports = {
-  router: require('express').Router().post('/recommend', authenticate, recommend),
+  router,
   validateRequest,
+  validateCorridorRequest,
   getStations,
   recommend,
+  corridorRecommend,
+  getTouristSpotsList,
   getWeights
 };
