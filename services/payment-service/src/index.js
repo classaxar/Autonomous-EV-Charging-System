@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const { connectDB } = require('./config/db');
 const { success, error } = require('./utils/envelope');
+const paymentRoutes = require('./routes/paymentRoutes');
+const internalRoutes = require('./routes/internalRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5007;
@@ -24,6 +26,8 @@ app.use((req, res, next) => {
 app.get('/health', (req, res) => {
   return success(res, { service: SERVICE_NAME, status: 'UP' }, 'ok');
 });
+app.use('/api/payments', paymentRoutes);
+app.use('/internal/payments', internalRoutes);
 
 // Placeholder for service-specific routes
 // app.use('/api/...', routes);

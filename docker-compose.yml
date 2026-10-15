@@ -31,6 +31,7 @@ services:
       NODE_ENV: ${NODE_ENV:-development}
       JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey_ev_2026_change_in_prod}
       INTERNAL_KEY: ${INTERNAL_KEY:-internal_secret_key_2026_ev_system}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
       AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:-http://auth-service:5001}
       EV_SERVICE_URL: ${EV_SERVICE_URL:-http://ev-service:5002}
       STATION_SERVICE_URL: ${STATION_SERVICE_URL:-http://station-service:5003}

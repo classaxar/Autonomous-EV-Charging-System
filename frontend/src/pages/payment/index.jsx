@@ -1,12 +1,26 @@
-import React from 'react';
+import { useEffect, useState } from 'react';
+import { getPayments, payPayment } from '../../api/paymentApi';
 
 export default function PaymentPage() {
-  return (
-    <div style={{ maxWidth: '1000px', margin: '2rem auto', padding: '0 1rem' }}>
-      <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '0.75rem', padding: '2rem' }}>
-        <h1 style={{ color: '#38bdf8', fontSize: '1.5rem', marginBottom: '0.75rem' }}>💳 Payments & Billing</h1>
-        <p style={{ color: '#94a3b8' }}>Invoice settlement and payment status interface. Assigned to Dev C (Task C-14).</p>
-      </div>
-    </div>
-  );
+  const [payments, setPayments] = useState([]);
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  async function load() {
+    try { setPayments(await getPayments()); }
+    catch (error) { setMessage(error.response?.data?.message || 'Unable to load payments.'); }
+    finally { setLoading(false); }
+  }
+  useEffect(() => { load(); }, []);
+  async function pay(paymentId) {
+    try { await payPayment(paymentId); await load(); }
+    catch (error) { setMessage(error.response?.data?.message || 'Unable to pay this invoice.'); }
+  }
+  if (loading) return <main><p>Loading payments...</p></main>;
+  return <main><h1>Payments</h1>{message && <p role="alert">{message}</p>}
+    {!payments.length && <p>No payments are available yet.</p>}
+    {payments.map((payment) => <article key={payment.paymentId}>
+      <h2>{payment.paymentId}</h2><p>{payment.energyKwh} kWh × {payment.pricePerKwh} = {Number(payment.amount).toFixed(2)}</p>
+      <p>Status: {payment.status}</p>{payment.status === 'PENDING' && <button type="button" onClick={() => pay(payment.paymentId)}>Pay</button>}
+    </article>)}
+  </main>;
 }

@@ -9,7 +9,6 @@ const client = axios.create({
   }
 });
 
-// Request interceptor: attach token from localStorage key 'ev_token'
 client.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('ev_token');
@@ -21,13 +20,12 @@ client.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor: extract envelope data or handle auth expiration
 client.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // If unauthorized, clear stale token
+    if (error.response?.status === 401) {
       localStorage.removeItem('ev_token');
+      localStorage.removeItem('token');
     }
     return Promise.reject(error);
   }

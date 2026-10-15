@@ -48,7 +48,7 @@ function scoreStations(input, stations) {
   const minPrice = Math.min(...prices);
   const maxPrice = Math.max(...prices);
   const weights = {
-    ...scoring.weights,
+    ...scoring.getWeights(),
     distance: scoring.weights.distance * (1 + batteryPriority / 100)
   };
   const weightTotal = Object.values(weights).reduce((total, weight) => total + weight, 0);

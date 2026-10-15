@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const { connectDB } = require('./config/db');
 const { success, error } = require('./utils/envelope');
+const analyticsRoutes = require('./routes/analyticsRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5009;
@@ -25,8 +26,7 @@ app.get('/health', (req, res) => {
   return success(res, { service: SERVICE_NAME, status: 'UP' }, 'ok');
 });
 
-// Placeholder for service-specific routes
-// app.use('/api/...', routes);
+app.use('/api/analytics', analyticsRoutes);
 
 // 404 handler
 app.use((req, res) => {

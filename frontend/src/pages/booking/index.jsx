@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import client from '../../api/client';
 import { createBooking } from '../../api/bookingApi';
+import { getVehicles } from '../../api/evApi';
 import { getStationSlots, getStations } from '../../api/stationApi';
 import { useAuth } from '../../context/AuthContext';
 
@@ -18,67 +18,40 @@ export default function BookingPage() {
   const [vehicleId, setVehicleId] = useState(routeState.vehicleId || '');
   const [stationId, setStationId] = useState(routeState.stationId || '');
   const [slotId, setSlotId] = useState(routeState.slotId || '');
-  const [duration, setDuration] = useState('60');
-import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { getVehicles } from '../../api/evApi';
-import { getStations, getStationSlots } from '../../api/stationApi';
-import { createBooking } from '../../api/bookingApi';
-import BookingForm from '../../components/booking/BookingForm';
-
-export default function BookingPage() {
-  const location = useLocation();
-  const bookingInfo = location.state || {};
-  const [vehicles, setVehicles] = useState([]);
-  const [stations, setStations] = useState([]);
-  const [selectedVehicleId, setSelectedVehicleId] = useState(bookingInfo.vehicleId || '');
-  const [selectedStationId, setSelectedStationId] = useState('');
-  const [selectedSlotId, setSelectedSlotId] = useState('');
   const [duration, setDuration] = useState(60);
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
 
   const loadOptions = useCallback(async () => {
-    setLoading(true);
-    setMessage('');
+    if (!token) {
+      setMessage('Sign in to create a booking.');
+      setLoading(false);
+      return;
+    }
     try {
-      const [vehicleResponse, stationList] = await Promise.all([
-        client.get('/api/ev'),
-        getStations()
-      ]);
-      const nextVehicles = vehicleResponse.data.data || [];
-      const nextStations = stationList;
+      const [nextVehicles, nextStations] = await Promise.all([getVehicles(), getStations()]);
       setVehicles(nextVehicles);
       setStations(nextStations);
-
       const chosenStationId = nextStations.some((station) => station.stationId === routeState.stationId)
-        ? routeState.stationId
-        : nextStations.some((station) => station.stationId === stationId)
-          ? stationId
-          : nextStations[0]?.stationId || '';
+        ? routeState.stationId : nextStations[0]?.stationId || '';
       const selectedStation = nextStations.find((station) => station.stationId === chosenStationId);
       const freeSlots = (selectedStation?.slots || []).filter((slot) => slot.status === 'FREE');
       setVehicleId((current) => nextVehicles.some((vehicle) => vehicle.vehicleId === current)
-        ? current
-        : routeState.vehicleId || nextVehicles[0]?.vehicleId || '');
+        ? current : nextVehicles[0]?.vehicleId || '');
       setStationId(chosenStationId);
-      setSlotId((current) => {
-        if (selectedStation && freeSlots.some((slot) => slot.slotId === current)) return current;
-        if (routeState.slotId && freeSlots.some((slot) => slot.slotId === routeState.slotId)) return routeState.slotId;
-        return freeSlots[0]?.slotId || '';
-      });
+      setSlotId(freeSlots.some((slot) => slot.slotId === routeState.slotId)
+        ? routeState.slotId : freeSlots[0]?.slotId || '');
     } catch (error) {
       setMessage(getErrorMessage(error, 'Unable to load vehicles and stations.'));
     } finally {
       setLoading(false);
     }
-  }, [routeState.stationId, routeState.slotId, routeState.vehicleId]);
+  }, [routeState.stationId, routeState.slotId, token]);
 
   useEffect(() => {
     loadOptions();
-  }, [loadOptions, token]);
+  }, [loadOptions]);
 
   const selectedStation = stations.find((station) => station.stationId === stationId);
   const freeSlots = (selectedStation?.slots || []).filter((slot) => slot.status === 'FREE');
@@ -88,216 +61,97 @@ export default function BookingPage() {
     const nextStation = stations.find((station) => station.stationId === nextStationId);
     setStationId(nextStationId);
     setSlotId((nextStation?.slots || []).find((slot) => slot.status === 'FREE')?.slotId || '');
-    setMessage('');
   }
 
   async function refreshSlots() {
     if (!stationId) return;
-    const nextSlots = await getStationSlots(stationId);
-    setStations((current) => current.map((station) => station.stationId === stationId
-      ? { ...station, slots: nextSlots }
-      : station));
-    setSlotId(nextSlots.find((slot) => slot.status === 'FREE')?.slotId || '');
-  }
-
-  async function submit(event) {
-  const token = localStorage.getItem('token') || '';
-
-  useEffect(() => {
-    let active = true;
-
-    const loadBookingOptions = async () => {
-      if (!token) {
-        setMessage('Sign in to create a booking.');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setMessage('');
-        const [vehicleList, stationList] = await Promise.all([
-          getVehicles(token),
-          getStations(token)
-        ]);
-        if (!active) return;
-
-        setVehicles(vehicleList);
-        setStations(stationList);
-        const nextStationId = bookingInfo.stationId || stationList[0]?.stationId || '';
-        setSelectedStationId(nextStationId);
-        setSelectedVehicleId((current) =>
-          vehicleList.some((vehicle) => vehicle.vehicleId === current)
-            ? current
-            : vehicleList[0]?.vehicleId || ''
-        );
-        const selectedStation = stationList.find((station) => station.stationId === nextStationId);
-        const freeSlots = (selectedStation?.slots || []).filter((slot) => slot.status === 'FREE');
-        const prefilledSlot = freeSlots.find((slot) => slot.slotId === bookingInfo.slotId);
-        setSelectedSlotId(prefilledSlot?.slotId || freeSlots[0]?.slotId || '');
-      } catch (error) {
-        if (active) {
-          setMessage(error.response?.data?.message || error.message || 'Unable to load booking options.');
-        }
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
-
-    loadBookingOptions();
-    return () => {
-      active = false;
-    };
-  }, [token, bookingInfo.stationId, bookingInfo.slotId]);
-
-  const handleStationChange = (event) => {
-    const nextStationId = event.target.value;
-    setSelectedStationId(nextStationId);
-    const station = stations.find((item) => item.stationId === nextStationId);
-    setSelectedSlotId((station?.slots || []).find((slot) => slot.status === 'FREE')?.slotId || '');
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setSubmitting(true);
-    setMessage('');
     try {
-      const result = await createBooking({
-        vehicleId,
-        stationId,
-        slotId,
-      const result = await createBooking(token, {
-        vehicleId: selectedVehicleId,
-        stationId: selectedStationId,
-        slotId: selectedSlotId,
-        startTime: new Date().toISOString(),
-        duration: Number(duration)
-      });
-      setBooking(result);
+      const nextSlots = await getStationSlots(stationId);
+      setStations((current) => current.map((station) => station.stationId === stationId ? { ...station, slots: nextSlots } : station));
+      setSlotId(nextSlots.find((slot) => slot.status === 'FREE')?.slotId || '');
     } catch (error) {
-      setMessage(getErrorMessage(error, 'Unable to create this booking.'));
-      if (error.response?.status === 409) {
-        try {
-          await refreshSlots();
-        } catch (refreshError) {
-          setMessage(getErrorMessage(refreshError, 'The slot is unavailable and could not be refreshed.'));
-      setMessage(error.response?.data?.message || error.message || 'Unable to create booking.');
-      if (error.response?.status === 409) {
-        try {
-          const slots = await getStationSlots(token, selectedStationId);
-          const updatedStation = stations.find((station) => station.stationId === selectedStationId);
-          if (updatedStation) {
-            const nextStations = stations.map((station) =>
-              station.stationId === selectedStationId
-                ? { ...station, slots }
-                : station
-            );
-            setStations(nextStations);
-            setSelectedSlotId(slots.find((slot) => slot.status === 'FREE')?.slotId || '');
-          }
-        } catch (refreshError) {
-          setMessage(refreshError.response?.data?.message || refreshError.message || 'Unable to refresh available slots.');
-        }
-      }
-    } finally {
-      setSubmitting(false);
+      setMessage(getErrorMessage(error, 'Unable to refresh station slots.'));
     }
   }
 
-  return (
-    <section style={{ maxWidth: '1000px', margin: '2rem auto', padding: '0 1rem' }}>
-      <header style={{ marginBottom: '1.5rem' }}>
-        <h1 style={{ color: 'var(--accent-cyan)', marginBottom: '0.5rem' }}>Book a charging slot</h1>
-        <p style={{ color: 'var(--text-secondary)' }}>Choose your EV, station, and a currently free slot.</p>
-      </header>
+  async function submit(event) {
+    event.preventDefault();
+    setMessage('');
+    if (!vehicleId || !stationId || !slotId) {
+      setMessage('Select an EV, station, and free slot before booking.');
+      return;
+    }
+    if (!Number.isInteger(Number(duration)) || Number(duration) < 1 || Number(duration) > 1440) {
+      setMessage('Duration must be a whole number between 1 and 1440 minutes.');
+      return;
+    }
+    try {
+      setBooking(await createBooking({
+        vehicleId, stationId, slotId, startTime: new Date().toISOString(), duration: Number(duration)
+      }));
+    } catch (error) {
+      setMessage(getErrorMessage(error, 'Unable to create this booking.'));
+      if (error.response?.status === 409) await refreshSlots();
+    }
+  }
 
-      {loading ? (
-        <p role="status">Loading booking options...</p>
-      ) : booking ? (
-        <section aria-live="polite" style={{ background: 'var(--bg-card)', border: '1px solid var(--accent-green)', borderRadius: '0.75rem', padding: '1.5rem' }}>
-          <h2 style={{ color: 'var(--accent-green)', marginBottom: '0.75rem' }}>Booking {booking.status}</h2>
-          <p>Booking ID: {booking.bookingId}</p>
-          <p>Station: {booking.stationId} · Slot: {booking.slotId}</p>
-          <p>Duration: {booking.duration} minutes</p>
-        </section>
-      ) : (
-        <>
-          {message && <p role="alert" style={{ color: 'var(--accent-red)', marginBottom: '1rem' }}>{message}</p>}
-          {vehicles.length === 0 ? (
-            <p role="status">Add an EV before making a booking.</p>
-          ) : stations.length === 0 ? (
-            <p role="status">There are no charging stations available.</p>
-          ) : (
-            <form onSubmit={submit} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '0.75rem', padding: '1.5rem', display: 'grid', gap: '1rem' }}>
-              <label>
-                EV
-                <select value={vehicleId} onChange={(event) => setVehicleId(event.target.value)} required>
-                  <option value="">Select an EV</option>
-                  {vehicles.map((vehicle) => (
-                    <option key={vehicle.vehicleId} value={vehicle.vehicleId}>
-                      {vehicle.brand} {vehicle.model}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Station
-                <select value={stationId} onChange={changeStation} required>
-                  {stations.map((station) => (
-                    <option key={station.stationId} value={station.stationId}>
-                      {station.name} · {station.pricePerKwh} / kWh
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Charging slot
-                <select value={slotId} onChange={(event) => setSlotId(event.target.value)} required disabled={freeSlots.length === 0}>
-                  {freeSlots.length === 0 && <option value="">No free slots</option>}
-                  {freeSlots.map((slot) => <option key={slot.slotId} value={slot.slotId}>{slot.slotId}</option>)}
-                </select>
-              </label>
-              <label>
-                Duration (minutes)
-                <input type="number" min="1" step="1" value={duration} onChange={(event) => setDuration(event.target.value)} required />
-              </label>
-              <button type="submit" disabled={submitting || !slotId}>
-                {submitting ? 'Booking...' : 'Confirm booking'}
+  if (loading) return <main><p>Loading booking options...</p></main>;
+  if (booking) return <main><h1>Booking confirmed</h1><p>Booking {booking.bookingId} is {booking.status}.</p></main>;
+
+  if (!vehicles.length || !stations.length) {
+    return (
+      <main>
+        <h1>Book a charging slot</h1>
+        {message && <p role="alert">{message}</p>}
+        {!vehicles.length && <p role="status">Add an EV before creating a booking.</p>}
+        {!stations.length && <p role="status">No charging stations are currently available.</p>}
+      </main>
+    );
+  }
+
+  return (
+    <main>
+      <h1>Book a charging slot</h1>
+      {message && <p role="alert">{message}</p>}
+      <form onSubmit={submit}>
+        <label>EV
+          <select value={vehicleId} onChange={(event) => setVehicleId(event.target.value)} required>
+            <option value="">Select an EV</option>
+            {vehicles.map((vehicle) => <option key={vehicle.vehicleId} value={vehicle.vehicleId}>{vehicle.brand} {vehicle.model}</option>)}
+          </select>
+        </label>
+        <label>Station
+          <select value={stationId} onChange={changeStation} required>
+            <option value="">Select a station</option>
+            {stations.map((station) => <option key={station.stationId} value={station.stationId}>{station.name}</option>)}
+          </select>
+        </label>
+        <label>Slot
+          <select value={slotId} onChange={(event) => setSlotId(event.target.value)} required>
+            <option value="">Select a free slot</option>
+            {freeSlots.map((slot) => <option key={slot.slotId} value={slot.slotId}>{slot.slotId}</option>)}
+          </select>
+        </label>
+        <label>Duration (minutes)<input type="number" min="1" max="1440" step="1" value={duration} onChange={(event) => setDuration(event.target.value)} required /></label>
+        <div>
+          <h2>Station slots</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: '0.5rem' }}>
+            {(selectedStation?.slots || []).map((slot) => (
+              <button
+                key={slot.slotId}
+                type="button"
+                disabled={slot.status !== 'FREE'}
+                onClick={() => setSlotId(slot.slotId)}
+                style={{ border: slot.slotId === slotId ? '2px solid var(--accent-cyan)' : '1px solid var(--border-color)' }}
+                aria-label={`${slot.slotId} ${slot.status}`}
+              >
+                {slot.slotId}<br />{slot.status}
               </button>
-            </form>
-          )}
-        </>
-      )}
-    </section>
-  };
-
-  return (
-    <div>
-      <h2>Booking</h2>
-      {loading && <p>Loading booking options...</p>}
-      {!loading && message && <p role="alert">{message}</p>}
-      {!loading && booking && (
-        <section aria-live="polite">
-          <h3>Booking confirmed</h3>
-          <p>{booking.bookingId} — {booking.status}</p>
-          <p>{booking.stationId} / {booking.slotId}</p>
-        </section>
-      )}
-      {!loading && !booking && (
-        <BookingForm
-          vehicles={vehicles}
-          stations={stations}
-          selectedVehicleId={selectedVehicleId}
-          selectedStationId={selectedStationId}
-          selectedSlotId={selectedSlotId}
-          duration={duration}
-          submitting={submitting}
-          onSubmit={handleSubmit}
-          onVehicleChange={(event) => setSelectedVehicleId(event.target.value)}
-          onStationChange={handleStationChange}
-          onSlotChange={(event) => setSelectedSlotId(event.target.value)}
-          onDurationChange={(event) => setDuration(event.target.value)}
-        />
-      )}
-    </div>
+            ))}
+          </div>
+        </div>
+        <button type="submit" disabled={!vehicleId || !stationId || !slotId || !freeSlots.length}>Confirm booking</button>
+      </form>
+    </main>
   );
 }

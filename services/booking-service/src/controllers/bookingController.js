@@ -54,12 +54,20 @@ async function updateSlot(stationId, slotId, status) {
     return mockStationClient.updateSlot(stationId, slotId, status);
   }
 
-  return requestWithRetry({
+  const response = await requestWithRetry({
     method: 'patch',
     url: `${getStationServiceUrl()}/internal/stations/${stationId}/slots/${slotId}`,
     data: { status },
     headers: buildInternalHeaders()
   });
+
+  if (response.data?.message === 'Slot status unchanged') {
+    const conflict = new Error('Selected slot is not available');
+    conflict.response = { status: 409 };
+    throw conflict;
+  }
+
+  return response;
 }
 
 async function updateQueue(stationId, delta) {
@@ -156,8 +164,8 @@ async function cancelBooking(req, res) {
     return error(res, 'Booking not found', 404);
   }
 
-  if (booking.status === 'CANCELLED') {
-    return error(res, 'Booking already cancelled', 409);
+  if (!['PENDING', 'CONFIRMED'].includes(booking.status)) {
+    return error(res, 'Only pending or confirmed bookings can be cancelled', 409);
   }
 
   booking.status = 'CANCELLED';
@@ -182,6 +190,18 @@ async function updateBookingStatusInternal(req, res) {
   const booking = await Booking.findOne({ bookingId: req.params.id });
   if (!booking) {
     return error(res, 'Booking not found', 404);
+  }
+
+  const allowedTransitions = {
+    PENDING: ['CONFIRMED'],
+    CONFIRMED: ['ACTIVE'],
+    ACTIVE: ['COMPLETED'],
+    COMPLETED: [],
+    CANCELLED: [],
+    EXPIRED: []
+  };
+  if (!allowedTransitions[booking.status].includes(status)) {
+    return error(res, `Invalid status transition from ${booking.status} to ${status}`, 409);
   }
 
   booking.status = status;

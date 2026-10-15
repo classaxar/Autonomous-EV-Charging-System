@@ -76,3 +76,11 @@ test('returns an empty ranking for no stations', () => {
 test('returns a reason for each ranked station', () => {
   expect(scoreStations(input, stations).ranked[0].reason).toContain('available charger');
 });
+
+test('reads score weight overrides from the environment', () => {
+  process.env.SCORE_WEIGHT_BATTERY = '0.8';
+  jest.resetModules();
+  const { scoreStations: scoreWithOverride } = require('./score');
+  expect(scoreWithOverride(input, stations).ranked[0].score).toBeGreaterThan(0);
+  delete process.env.SCORE_WEIGHT_BATTERY;
+});

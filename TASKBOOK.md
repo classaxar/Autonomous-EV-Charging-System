@@ -56,16 +56,16 @@ Demo flow: Register/Login -> Add EV -> View stations -> Get recommended station 
 
 ## DEV B (Phase 1)
 
-- [ ] **B-01** ev-service: model, CRUD, ownership by `userId`, internal battery patch, validation, 3+ jest tests, Dockerfile. Done when: Postman CRUD works with a USER token and another user cannot read it.
 - [x] **B-01** ev-service: model, CRUD, ownership by `userId`, internal battery patch, validation, 3+ jest tests, Dockerfile. Done when: Postman CRUD works with a USER token and another user cannot read it.
-- [ ] **B-02** station-service: model, CRUD (admin roles), `GET /api/stations` with `availableChargers` and `queueLength`, slots list, internal slot + queue patch, **seed script** (3 stations per RULEBOOK 6, auto-seeds on empty DB), Dockerfile. Done when: GET returns 3 stations after a fresh `docker compose up`.
+- [x] **B-01** ev-service: model, CRUD, ownership by `userId`, internal battery patch, validation, 3+ jest tests, Dockerfile. Done when: Postman CRUD works with a USER token and another user cannot read it.
+- [x] **B-02** station-service: model, CRUD (admin roles), `GET /api/stations` with `availableChargers` and `queueLength`, slots list, internal slot + queue patch, **seed script** (3 stations per RULEBOOK 6, auto-seeds on empty DB), Dockerfile. Done when: GET returns 3 stations after a fresh `docker compose up`.
 - [x] **B-03** booking-service: create (slot check via station internal API, `USE_MOCK` fallback), list, get, cancel, internal status, status enum, Dockerfile. Notification call is non-fatal (log and continue if down). Done when: booking creates, slot becomes BOOKED, second booking of same slot returns 409, cancel frees it.
 - [x] **B-02** station-service: model, CRUD (admin roles), `GET /api/stations` with `availableChargers` and `queueLength`, slots list, internal slot + queue patch, **seed script** (3 stations per RULEBOOK 6, auto-seeds on empty DB), Dockerfile. Done when: GET returns 3 stations after a fresh `docker compose up`.
-- [ ] **B-03** booking-service: create (slot check via station internal API, `USE_MOCK` fallback), list, get, cancel, internal status, status enum, Dockerfile. Notification call is non-fatal (log and continue if down). Done when: booking creates, slot becomes BOOKED, second booking of same slot returns 409, cancel frees it.
-- [ ] **B-04** Frontend EV Management page (`pages/ev/`, `api/evApi.js`): list, add, edit, delete EV. Done when: add EV in UI appears in Mongo.
+- [x] **B-03** booking-service: create (slot check via station internal API, `USE_MOCK` fallback), list, get, cancel, internal status, status enum, Dockerfile. Notification call is non-fatal (log and continue if down). Done when: booking creates, slot becomes BOOKED, second booking of same slot returns 409, cancel frees it.
+- [x] **B-04** Frontend EV Management page (`pages/ev/`, `api/evApi.js`): list, add, edit, delete EV. Done when: add EV in UI appears in Mongo.
 - [x] **B-05** Frontend Booking page (`pages/booking/`, `api/bookingApi.js`, `api/stationApi.js`): receives `stationId`, `slotId` from router state (set by C's recommendation page) or lets user pick a station and slot, confirm booking, success view. Done when: booking shows CONFIRMED.
 - [x] **B-04** Frontend EV Management page (`pages/ev/`, `api/evApi.js`): list, add, edit, delete EV. Done when: add EV in UI appears in Mongo.
-- [ ] **B-05** Frontend Booking page (`pages/booking/`, `api/bookingApi.js`, `api/stationApi.js`): receives `stationId`, `slotId` from router state (set by C's recommendation page) or lets user pick a station and slot, confirm booking, success view. Done when: booking shows CONFIRMED.
+- [x] **B-05** Frontend Booking page (`pages/booking/`, `api/bookingApi.js`, `api/stationApi.js`): receives `stationId`, `slotId` from router state (set by C's recommendation page) or lets user pick a station and slot, confirm booking, success view. Done when: booking shows CONFIRMED.
 
 ## DEV C (Phase 1)
 
@@ -76,7 +76,7 @@ Demo flow: Register/Login -> Add EV -> View stations -> Get recommended station 
 
 ### M1 EXIT CHECKLIST (A runs)
 - [ ] Fresh clone + `docker compose up --build` OK
-- [ ] Flow demo works end-to-end
+- [x] Flow demo works end-to-end
 - [ ] `develop` merged to `main`, tag `v0.5-demo`
 - [ ] Each dev has their own commits/PRs visible on GitHub
 
@@ -99,22 +99,22 @@ Planned order: D1-D2 backend services, D3 frontend + Docker Hub, D4-D5 Kubernete
 
 ## DEV B (Phase 2)
 
-- [ ] **B-10** Station slot availability: slot-level endpoints finalized, `availableChargers` auto-recomputed, `PATCH` idempotent, admin UI-ready `PUT`. Done when: concurrent double-booking test (two curls) results in exactly one CONFIRMED.
-- [ ] **B-11** Booking lifecycle: status transitions enforced (`PENDING->CONFIRMED->ACTIVE->COMPLETED`, cancel only from PENDING/CONFIRMED), **expiry job** (`node-cron` or `setInterval`) sets `EXPIRED` when a CONFIRMED booking is 15 min past `startTime` and releases slot/queue. Done when: expiry demo works with a short `EXPIRY_MINUTES` env (add to your service `.env.example` only; tell A to add it to compose by issue).
-- [ ] **B-12** Frontend History page (`pages/history/`): bookings + sessions (via `/api/bookings`, `/api/charging/history`, `/api/payments`) merged table: date, station, energy, amount, status. Cancel button for upcoming bookings. Done when: table matches DB.
-- [ ] **B-13** EV and booking polish: battery bar in EV page, booking form validations, empty/error states, station list with slot grid (FREE/BOOKED colors). Done when: no unhandled UI errors during demo flow.
-- [ ] **B-14** Tests and docs for own services: >= 5 jest tests per service, `docs/ev-service.md`, `docs/station-service.md`, `docs/booking-service.md` (endpoints, models, run, env) in own service folders as `README.md`. Done when: `npm test` green.
-- [ ] **B-15** Viva notes: create `services/booking-service/VIVA.md` with 8 likely questions and answers on EV/Station/Booking, DB-per-service, REST design. Done when: file merged.
+- [x] **B-10** Station slot availability: slot-level endpoints finalized, `availableChargers` auto-recomputed, `PATCH` idempotent, admin UI-ready `PUT`. Done when: concurrent double-booking test (two curls) results in exactly one CONFIRMED.
+- [x] **B-11** Booking lifecycle: status transitions enforced (`PENDING->CONFIRMED->ACTIVE->COMPLETED`, cancel only from PENDING/CONFIRMED), **expiry job** (`node-cron` or `setInterval`) sets `EXPIRED` when a CONFIRMED booking is 15 min past `startTime` and releases slot/queue. Done when: expiry demo works with a short `EXPIRY_MINUTES` env (add to your service `.env.example` only; tell A to add it to compose by issue).
+- [x] **B-12** Frontend History page (`pages/history/`): bookings + sessions (via `/api/bookings`, `/api/charging/history`, `/api/payments`) merged table: date, station, energy, amount, status. Cancel button for upcoming bookings. Done when: table matches DB.
+- [x] **B-13** EV and booking polish: battery bar in EV page, booking form validations, empty/error states, station list with slot grid (FREE/BOOKED colors). Done when: no unhandled UI errors during demo flow.
+- [x] **B-14** Tests and docs for own services: >= 5 jest tests per service, `docs/ev-service.md`, `docs/station-service.md`, `docs/booking-service.md` (endpoints, models, run, env) in own service folders as `README.md`. Done when: `npm test` green.
+- [x] **B-15** Viva notes: create `services/booking-service/VIVA.md` with 8 likely questions and answers on EV/Station/Booking, DB-per-service, REST design. Done when: file merged.
 
 ## DEV C (Phase 2)
 
-- [ ] **C-10** charging-service full per RULEBOOK 6: start (validate booking CONFIRMED), simulated progress by elapsed time x `SIM_SPEEDUP`, auto-complete at target, stop, history, internal `all`, completion pipeline (booking COMPLETED, slot FREE, queue -1, EV battery update, payment create, notifications). Non-fatal downstream failures are logged and retried once. Done when: start -> poll -> auto-complete creates a PENDING payment.
-- [ ] **C-11** payment-service full: internal create (amount = energy x price, 2 decimals), pay (simulated), list own, internal `all`, idempotent create per `sessionId`, notification on paid. Done when: 24 kWh x 12 = 288.00 and double-create returns same payment.
-- [ ] **C-12** analytics-service: summary, daily, per-station endpoints aggregating from internal APIs (cache 30 s), admin-only. Done when: numbers match manual count from DBs.
-- [ ] **C-13** Frontend Live Charging page (`pages/charging/`, `api/chargingApi.js`): start from a confirmed booking, progress bar (start% -> now% -> target%), energy, elapsed time, polling every 3 s, Stop button, auto-redirect to `/payment` when complete. Done when: demo shows battery rising to 80%.
-- [ ] **C-14** Frontend Payment page (`pages/payment/`, `api/paymentApi.js`): energy, rate, total, Pay button, success state. Done when: status flips to PAID and a notification appears.
-- [ ] **C-15** Decision engine v2: weights overridable via env, input validation errors, handles stations service down (503), performance test (`services/decision-service/scripts/load-test.js` using `autocannon`, 200 req/s for 30 s). Done when: tests >= 10 and load script runs.
-- [ ] **C-16** Docs and viva: `README.md` in each of own 4 services, `services/decision-service/VIVA.md` with scoring formula explanation, "why autonomous", scaling answer, worked example table (Stations A/B/C). Done when: merged.
+- [x] **C-10** charging-service full per RULEBOOK 6: start (validate booking CONFIRMED), simulated progress by elapsed time x `SIM_SPEEDUP`, auto-complete at target, stop, history, internal `all`, completion pipeline (booking COMPLETED, slot FREE, queue -1, EV battery update, payment create, notifications). Non-fatal downstream failures are logged and retried once. Done when: start -> poll -> auto-complete creates a PENDING payment.
+- [x] **C-11** payment-service full: internal create (amount = energy x price, 2 decimals), pay (simulated), list own, internal `all`, idempotent create per `sessionId`, notification on paid. Done when: 24 kWh x 12 = 288.00 and double-create returns same payment.
+- [x] **C-12** analytics-service: summary, daily, per-station endpoints aggregating from internal APIs (cache 30 s), admin-only. Done when: numbers match manual count from DBs.
+- [x] **C-13** Frontend Live Charging page (`pages/charging/`, `api/chargingApi.js`): start from a confirmed booking, progress bar (start% -> now% -> target%), energy, elapsed time, polling every 3 s, Stop button, auto-redirect to `/payment` when complete. Done when: demo shows battery rising to 80%.
+- [x] **C-14** Frontend Payment page (`pages/payment/`, `api/paymentApi.js`): energy, rate, total, Pay button, success state. Done when: status flips to PAID and a notification appears.
+- [x] **C-15** Decision engine v2: weights overridable via env, input validation errors, handles stations service down (503), performance test (`services/decision-service/scripts/load-test.js` using `autocannon`, 200 req/s for 30 s). Done when: tests >= 10 and load script runs.
+- [x] **C-16** Docs and viva: `README.md` in each of own 4 services, `services/decision-service/VIVA.md` with scoring formula explanation, "why autonomous", scaling answer, worked example table (Stations A/B/C). Done when: merged.
 
 ---
 

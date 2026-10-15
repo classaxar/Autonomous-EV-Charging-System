@@ -5,6 +5,7 @@ const { connectDB } = require('./config/db');
 const { success, error } = require('./utils/envelope');
 const bookingRoutes = require('./routes/bookingRoutes');
 const internalRoutes = require('./routes/internalRoutes');
+const { startExpiryJob } = require('./services/expiryJob');
 
 const app = express();
 const PORT = process.env.PORT || 5004;
@@ -33,6 +34,7 @@ app.use((err, req, res, next) => {
 
 async function startServer() {
   await connectDB();
+  startExpiryJob();
   const server = app.listen(PORT, () => {
     console.log(`[${SERVICE_NAME}] Listening on port ${PORT}`);
   });

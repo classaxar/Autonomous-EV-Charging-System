@@ -1,12 +1,6 @@
-import axios from 'axios';
+import client from './client';
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000'
-});
-
-export async function recommendChargingStation(payload, token) {
-  const response = await api.post('/api/decision/recommend', payload, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
+export async function recommendChargingStation(payload) {
+  const response = await client.post('/api/decision/recommend', payload);
   return response.data.data;
 }

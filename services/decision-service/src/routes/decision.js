@@ -13,6 +13,16 @@ const requiredFields = [
   'location'
 ];
 
+function getWeights() {
+  return {
+    battery: Number(process.env.SCORE_WEIGHT_BATTERY || 0.30),
+    distance: Number(process.env.SCORE_WEIGHT_DISTANCE || 0.20),
+    queue: Number(process.env.SCORE_WEIGHT_QUEUE || 0.20),
+    price: Number(process.env.SCORE_WEIGHT_PRICE || 0.15),
+    speed: Number(process.env.SCORE_WEIGHT_SPEED || 0.15)
+  };
+}
+
 function validateRequest(body) {
   if (requiredFields.some((field) => body[field] === undefined)) {
     return 'vehicleId, battery and charging fields, and location are required';
@@ -76,5 +86,6 @@ module.exports = {
   router: require('express').Router().post('/recommend', authenticate, recommend),
   validateRequest,
   getStations,
-  recommend
+  recommend,
+  getWeights
 };

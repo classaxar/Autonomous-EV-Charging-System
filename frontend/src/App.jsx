@@ -20,9 +20,9 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+        <div className="app-shell">
           <Navbar />
-          <main style={{ flex: 1 }}>
+          <main className="app-content">
             <Routes>
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />

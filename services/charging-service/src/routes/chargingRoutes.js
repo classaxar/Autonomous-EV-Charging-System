@@ -1,0 +1,10 @@
+const express = require('express');
+const { authenticate } = require('../middleware/auth');
+const controller = require('../controllers/chargingController');
+const router = express.Router();
+router.use(authenticate);
+router.post('/start', controller.start);
+router.get('/history', controller.history);
+router.get('/:sessionId', controller.getSession);
+router.post('/:sessionId/stop', controller.stop);
+module.exports = router;

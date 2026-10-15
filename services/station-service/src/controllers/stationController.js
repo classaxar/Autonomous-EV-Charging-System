@@ -118,26 +118,75 @@ async function updateSlotStatus(req, res) {
     return error(res, 'status must be one of FREE, BOOKED, CHARGING, OFFLINE', 400);
   }
 
-  const station = await Station.findOne({ stationId: id });
-  if (!station) {
+  const station = await Station.findOneAndUpdate(
+    {
+      stationId: id,
+      slots: { $elemMatch: { slotId, status: { $ne: status } } }
+    },
+    [
+      {
+        $set: {
+          slots: {
+            $map: {
+              input: '$slots',
+              as: 'slot',
+              in: {
+                $cond: [
+                  { $eq: ['$$slot.slotId', slotId] },
+                  { slotId: '$$slot.slotId', status },
+                  '$$slot'
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        $set: {
+          availableChargers: {
+            $size: {
+              $filter: {
+                input: '$slots',
+                as: 'slot',
+                cond: { $eq: ['$$slot.status', 'FREE'] }
+              }
+            }
+          }
+        }
+      }
+    ],
+    { new: true }
+  );
+
+  if (station) {
+    return success(res, {
+      stationId: station.stationId,
+      slotId,
+      status,
+      availableChargers: station.availableChargers
+    }, 'Slot status updated');
+  }
+
+  const current = await Station.findOne({ stationId: id });
+  if (!current) {
     return error(res, 'Station not found', 404);
   }
 
-  const slot = (station.slots || []).find((entry) => entry.slotId === slotId);
+  const slot = (current.slots || []).find((entry) => entry.slotId === slotId);
   if (!slot) {
     return error(res, 'Slot not found', 404);
   }
 
-  slot.status = status;
-  station.availableChargers = calculateAvailableChargers(station.slots || []);
-  await station.save();
+  if (slot.status === status) {
+    return success(res, {
+      stationId: current.stationId,
+      slotId,
+      status,
+      availableChargers: calculateAvailableChargers(current.slots || [])
+    }, 'Slot status unchanged');
+  }
 
-  return success(res, {
-    stationId: station.stationId,
-    slotId,
-    status,
-    availableChargers: station.availableChargers
-  }, 'Slot status updated');
+  return error(res, 'Selected slot is not available', 409);
 }
 
 async function updateQueue(req, res) {

@@ -46,6 +46,7 @@ for (const route of routes) {
     createProxyMiddleware({
       target: route.target,
       changeOrigin: true,
+      pathRewrite: (path) => `${route.path}${path}`,
       on: {
         proxyReq: fixRequestBody,
         error: (err, req, res) => {
