@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import client from '../../api/client';
+import { getAnalyticsSummary, getDailyAnalytics } from '../../api/analyticsApi';
+import { getStations } from '../../api/stationApi';
 
 export default function AdminDashboard() {
   const [summary, setSummary] = useState({
@@ -24,23 +25,15 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function fetchAnalytics() {
       try {
-        // Try live analytics summary endpoint
-        const sumRes = await client.get('/api/analytics/summary').catch(() => null);
-        if (sumRes && sumRes.data && sumRes.data.success) {
-          setSummary(sumRes.data.data);
-        }
+        const [summaryData, dailyDataRes, stationsData] = await Promise.all([
+          getAnalyticsSummary().catch(() => null),
+          getDailyAnalytics().catch(() => []),
+          getStations().catch(() => [])
+        ]);
 
-        // Try live daily sessions
-        const dailyRes = await client.get('/api/analytics/daily').catch(() => null);
-        if (dailyRes && dailyRes.data && dailyRes.data.success && dailyRes.data.data.length > 0) {
-          setDailyData(dailyRes.data.data);
-        }
-
-        // Stations info
-        const stRes = await client.get('/api/stations').catch(() => null);
-        if (stRes && stRes.data && stRes.data.success) {
-          setStations(stRes.data.data);
-        }
+        if (summaryData) setSummary(summaryData);
+        if (Array.isArray(dailyDataRes) && dailyDataRes.length > 0) setDailyData(dailyDataRes);
+        if (Array.isArray(stationsData) && stationsData.length > 0) setStations(stationsData);
       } catch (err) {
         console.warn('[Admin] Fallback to mock analytics data until backend services report');
       } finally {
@@ -54,74 +47,144 @@ export default function AdminDashboard() {
   const maxDailyEnergy = Math.max(...dailyData.map((d) => d.energyKwh || 1), 1000);
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1rem' }}>
+    <div className="page-container">
+      {/* Title Header */}
       <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ color: '#f8fafc', margin: 0, fontSize: '1.875rem' }}>
-          System Administration & Analytics 📈
+        <span className="eyebrow">Enterprise Telemetry</span>
+        <h1 style={{ fontSize: '2.2rem', marginTop: '0.25rem', color: 'var(--text-primary)' }}>
+          System Administration & Network Analytics 📈
         </h1>
-        <p style={{ color: '#94a3b8', margin: '0.35rem 0 0', fontSize: '0.95rem' }}>
-          Network-wide energy distribution, station utilization, and revenue statistics.
+        <p className="muted" style={{ fontSize: '0.95rem', marginTop: '0.2rem' }}>
+          Real-time energy throughput, grid congestion rates, pricing yields, and charger availability.
         </p>
       </div>
 
-      {/* Metric Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '0.75rem', padding: '1.25rem' }}>
-          <div style={{ color: '#94a3b8', fontSize: '0.8rem', textTransform: 'uppercase' }}>Total Revenue</div>
-          <div style={{ color: '#10b981', fontSize: '1.75rem', fontWeight: 'bold', margin: '0.35rem 0' }}>
+      {/* Metric Cards Row */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+        gap: '1.25rem',
+        marginBottom: '2rem'
+      }}>
+        {/* Total Revenue */}
+        <div className="surface" style={{ padding: '1.5rem', position: 'relative', overflow: 'hidden' }}>
+          <div className="muted" style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            Total Revenue
+          </div>
+          <div style={{ color: 'var(--accent-green)', fontSize: '2rem', fontWeight: 700, margin: '0.4rem 0 0.2rem' }}>
             ₹{summary.totalRevenue.toLocaleString()}
           </div>
-          <div style={{ color: '#64748b', fontSize: '0.75rem' }}>Aggregated across all stations</div>
-        </div>
-
-        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '0.75rem', padding: '1.25rem' }}>
-          <div style={{ color: '#94a3b8', fontSize: '0.8rem', textTransform: 'uppercase' }}>Energy Dispensed</div>
-          <div style={{ color: '#38bdf8', fontSize: '1.75rem', fontWeight: 'bold', margin: '0.35rem 0' }}>
-            {summary.totalEnergyKwh.toLocaleString()} <span style={{ fontSize: '1rem' }}>kWh</span>
+          <div className="muted" style={{ fontSize: '0.78rem' }}>
+            Aggregated across all stations
           </div>
-          <div style={{ color: '#64748b', fontSize: '0.75rem' }}>Total charging delivery</div>
         </div>
 
-        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '0.75rem', padding: '1.25rem' }}>
-          <div style={{ color: '#94a3b8', fontSize: '0.8rem', textTransform: 'uppercase' }}>Total Sessions</div>
-          <div style={{ color: '#f8fafc', fontSize: '1.75rem', fontWeight: 'bold', margin: '0.35rem 0' }}>
+        {/* Energy Dispensed */}
+        <div className="surface" style={{ padding: '1.5rem', position: 'relative', overflow: 'hidden' }}>
+          <div className="muted" style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            Energy Dispensed
+          </div>
+          <div style={{ color: 'var(--accent-cyan)', fontSize: '2rem', fontWeight: 700, margin: '0.4rem 0 0.2rem' }}>
+            {summary.totalEnergyKwh.toLocaleString()} <span style={{ fontSize: '1.1rem', fontWeight: 400 }}>kWh</span>
+          </div>
+          <div className="muted" style={{ fontSize: '0.78rem' }}>
+            Total charging delivery
+          </div>
+        </div>
+
+        {/* Total Sessions */}
+        <div className="surface" style={{ padding: '1.5rem', position: 'relative', overflow: 'hidden' }}>
+          <div className="muted" style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            Total Sessions
+          </div>
+          <div style={{ color: 'var(--text-primary)', fontSize: '2rem', fontWeight: 700, margin: '0.4rem 0 0.2rem' }}>
             {summary.totalSessions}
           </div>
-          <div style={{ color: '#64748b', fontSize: '0.75rem' }}>{summary.activeSessions} currently active</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: 'var(--accent-cyan)' }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent-cyan)' }} />
+            {summary.activeSessions} currently active
+          </div>
         </div>
 
-        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '0.75rem', padding: '1.25rem' }}>
-          <div style={{ color: '#94a3b8', fontSize: '0.8rem', textTransform: 'uppercase' }}>Avg Session Duration</div>
-          <div style={{ color: '#f59e0b', fontSize: '1.75rem', fontWeight: 'bold', margin: '0.35rem 0' }}>
-            {summary.avgChargingMinutes} <span style={{ fontSize: '1rem' }}>min</span>
+        {/* Turnaround Time */}
+        <div className="surface" style={{ padding: '1.5rem', position: 'relative', overflow: 'hidden' }}>
+          <div className="muted" style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            Avg Turnaround Time
           </div>
-          <div style={{ color: '#64748b', fontSize: '0.75rem' }}>Turnaround efficiency</div>
+          <div style={{ color: 'var(--accent-amber)', fontSize: '2rem', fontWeight: 700, margin: '0.4rem 0 0.2rem' }}>
+            {summary.avgChargingMinutes} <span style={{ fontSize: '1.1rem', fontWeight: 400 }}>min</span>
+          </div>
+          <div className="muted" style={{ fontSize: '0.78rem' }}>
+            Mean session duration
+          </div>
         </div>
       </div>
 
       {/* SVG Bar Chart for Daily Energy Delivery */}
-      <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '0.75rem', padding: '1.5rem', marginBottom: '2rem' }}>
-        <h3 style={{ color: '#f8fafc', margin: '0 0 1rem' }}>Daily Energy Dispensed (kWh)</h3>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem', height: '180px', padding: '1rem 0 0', borderBottom: '1px solid #334155' }}>
+      <div className="surface" style={{ padding: '1.75rem', marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--text-primary)' }}>
+              Weekly Energy Delivery Pattern (kWh)
+            </h3>
+            <span className="muted" style={{ fontSize: '0.8rem' }}>
+              Dynamic load distribution across daily peak hours
+            </span>
+          </div>
+          <span style={{
+            fontSize: '0.75rem',
+            background: 'rgba(56, 189, 248, 0.12)',
+            color: 'var(--accent-cyan)',
+            padding: '4px 12px',
+            borderRadius: '999px',
+            fontWeight: 600
+          }}>
+            7-Day History
+          </span>
+        </div>
+
+        <div style={{
+          display: 'flex',
+          alignItems: 'flex-end',
+          gap: '1.25rem',
+          height: '200px',
+          padding: '1.5rem 1rem 0',
+          borderBottom: '1px solid var(--border-color)',
+          background: 'rgba(7, 17, 31, 0.45)',
+          borderRadius: '12px'
+        }}>
           {dailyData.map((d, i) => {
-            const heightPercent = Math.max(15, Math.round((d.energyKwh / maxDailyEnergy) * 100));
+            const heightPercent = Math.max(18, Math.round((d.energyKwh / maxDailyEnergy) * 100));
             return (
-              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
-                <div style={{ fontSize: '0.75rem', color: '#38bdf8', marginBottom: '0.35rem' }}>
+              <div
+                key={i}
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  height: '100%',
+                  justifyContent: 'flex-end'
+                }}
+              >
+                <div style={{ fontSize: '0.72rem', color: 'var(--accent-cyan)', fontWeight: 600, marginBottom: '0.4rem' }}>
                   {d.energyKwh}k
                 </div>
                 <div
                   style={{
                     width: '100%',
-                    maxWidth: '45px',
+                    maxWidth: '48px',
                     height: `${heightPercent}%`,
-                    background: 'linear-gradient(180deg, #38bdf8 0%, #0284c7 100%)',
-                    borderRadius: '4px 4px 0 0',
+                    background: 'linear-gradient(180deg, var(--accent-cyan) 0%, #1d4ed8 100%)',
+                    borderRadius: '6px 6px 0 0',
+                    boxShadow: '0 4px 12px rgba(56, 189, 248, 0.25)',
                     transition: 'height 0.4s ease'
                   }}
                   title={`${d.date}: ${d.sessions} sessions, ₹${d.revenue}`}
                 />
-                <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.5rem' }}>{d.date}</div>
+                <div className="muted" style={{ fontSize: '0.75rem', fontWeight: 600, marginTop: '0.6rem' }}>
+                  {d.date}
+                </div>
               </div>
             );
           })}
@@ -129,57 +192,79 @@ export default function AdminDashboard() {
       </div>
 
       {/* Station List Table */}
-      <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '0.75rem', padding: '1.5rem' }}>
-        <h3 style={{ color: '#f8fafc', margin: '0 0 1rem' }}>Active Charging Station Fleet</h3>
+      <div className="surface" style={{ padding: '1.75rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--text-primary)' }}>
+              Active Charging Station Fleet
+            </h3>
+            <span className="muted" style={{ fontSize: '0.8rem' }}>
+              Connected hub telemetry and live queue capacity
+            </span>
+          </div>
+          <span style={{
+            fontSize: '0.75rem',
+            background: 'rgba(53, 211, 153, 0.12)',
+            color: 'var(--accent-green)',
+            padding: '4px 12px',
+            borderRadius: '999px',
+            fontWeight: 600
+          }}>
+            All Stations Online
+          </span>
+        </div>
+
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.88rem' }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid #334155', color: '#94a3b8' }}>
-                <th style={{ padding: '0.75rem' }}>Station ID</th>
-                <th style={{ padding: '0.75rem' }}>Name</th>
-                <th style={{ padding: '0.75rem' }}>Power (kW)</th>
-                <th style={{ padding: '0.75rem' }}>Price/kWh</th>
-                <th style={{ padding: '0.75rem' }}>Available</th>
-                <th style={{ padding: '0.75rem' }}>Queue</th>
+              <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
+                <th style={{ padding: '0.85rem' }}>Station ID</th>
+                <th style={{ padding: '0.85rem' }}>Hub Name</th>
+                <th style={{ padding: '0.85rem' }}>Max Power</th>
+                <th style={{ padding: '0.85rem' }}>Tariff Rate</th>
+                <th style={{ padding: '0.85rem' }}>Availability</th>
+                <th style={{ padding: '0.85rem' }}>Queue Load</th>
               </tr>
             </thead>
             <tbody>
               {stations.length === 0 ? (
                 <>
-                  <tr style={{ borderBottom: '1px solid #1e293b' }}>
-                    <td style={{ padding: '0.75rem', color: '#38bdf8' }}>ST101</td>
-                    <td style={{ padding: '0.75rem', color: '#f8fafc' }}>Gandhinagar Fast Hub A</td>
-                    <td style={{ padding: '0.75rem' }}>50 kW</td>
-                    <td style={{ padding: '0.75rem' }}>₹12</td>
-                    <td style={{ padding: '0.75rem', color: '#10b981' }}>8 / 10</td>
-                    <td style={{ padding: '0.75rem' }}>1</td>
+                  <tr style={{ borderBottom: '1px solid rgba(148, 163, 184, 0.08)' }}>
+                    <td style={{ padding: '0.85rem', color: 'var(--accent-cyan)', fontFamily: 'monospace', fontWeight: 600 }}>ST-101</td>
+                    <td style={{ padding: '0.85rem', color: 'var(--text-primary)', fontWeight: 600 }}>Gandhinagar Fast Hub A</td>
+                    <td style={{ padding: '0.85rem' }}>50 kW (CCS2)</td>
+                    <td style={{ padding: '0.85rem', color: 'var(--accent-cyan)' }}>₹12 / kWh</td>
+                    <td style={{ padding: '0.85rem', color: 'var(--accent-green)', fontWeight: 700 }}>8 / 10 Free</td>
+                    <td style={{ padding: '0.85rem' }}>1 waiting</td>
                   </tr>
-                  <tr style={{ borderBottom: '1px solid #1e293b' }}>
-                    <td style={{ padding: '0.75rem', color: '#38bdf8' }}>ST102</td>
-                    <td style={{ padding: '0.75rem', color: '#f8fafc' }}>Ahmedabad Highway Hub B</td>
-                    <td style={{ padding: '0.75rem' }}>30 kW</td>
-                    <td style={{ padding: '0.75rem' }}>₹10</td>
-                    <td style={{ padding: '0.75rem', color: '#10b981' }}>5 / 8</td>
-                    <td style={{ padding: '0.75rem' }}>2</td>
+                  <tr style={{ borderBottom: '1px solid rgba(148, 163, 184, 0.08)' }}>
+                    <td style={{ padding: '0.85rem', color: 'var(--accent-cyan)', fontFamily: 'monospace', fontWeight: 600 }}>ST-102</td>
+                    <td style={{ padding: '0.85rem', color: 'var(--text-primary)', fontWeight: 600 }}>Ahmedabad Highway Hub B</td>
+                    <td style={{ padding: '0.85rem' }}>30 kW (CCS2)</td>
+                    <td style={{ padding: '0.85rem', color: 'var(--accent-cyan)' }}>₹10 / kWh</td>
+                    <td style={{ padding: '0.85rem', color: 'var(--accent-green)', fontWeight: 700 }}>5 / 8 Free</td>
+                    <td style={{ padding: '0.85rem' }}>2 waiting</td>
                   </tr>
                   <tr>
-                    <td style={{ padding: '0.75rem', color: '#38bdf8' }}>ST103</td>
-                    <td style={{ padding: '0.75rem', color: '#f8fafc' }}>Infocity Supercharger C</td>
-                    <td style={{ padding: '0.75rem' }}>60 kW</td>
-                    <td style={{ padding: '0.75rem' }}>₹9</td>
-                    <td style={{ padding: '0.75rem', color: '#10b981' }}>10 / 12</td>
-                    <td style={{ padding: '0.75rem' }}>0</td>
+                    <td style={{ padding: '0.85rem', color: 'var(--accent-cyan)', fontFamily: 'monospace', fontWeight: 600 }}>ST-103</td>
+                    <td style={{ padding: '0.85rem', color: 'var(--text-primary)', fontWeight: 600 }}>Infocity Supercharger C</td>
+                    <td style={{ padding: '0.85rem' }}>60 kW (CCS2)</td>
+                    <td style={{ padding: '0.85rem', color: 'var(--accent-cyan)' }}>₹9 / kWh</td>
+                    <td style={{ padding: '0.85rem', color: 'var(--accent-green)', fontWeight: 700 }}>10 / 12 Free</td>
+                    <td style={{ padding: '0.85rem' }}>0 waiting</td>
                   </tr>
                 </>
               ) : (
                 stations.map((st) => (
-                  <tr key={st.stationId} style={{ borderBottom: '1px solid #334155' }}>
-                    <td style={{ padding: '0.75rem', color: '#38bdf8' }}>{st.stationId}</td>
-                    <td style={{ padding: '0.75rem', color: '#f8fafc' }}>{st.name}</td>
-                    <td style={{ padding: '0.75rem' }}>{st.chargerPowerKw} kW</td>
-                    <td style={{ padding: '0.75rem' }}>₹{st.pricePerKwh}</td>
-                    <td style={{ padding: '0.75rem', color: '#10b981' }}>{st.availableChargers} / {st.totalChargers}</td>
-                    <td style={{ padding: '0.75rem' }}>{st.queueLength}</td>
+                  <tr key={st.stationId} style={{ borderBottom: '1px solid rgba(148, 163, 184, 0.08)' }}>
+                    <td style={{ padding: '0.85rem', color: 'var(--accent-cyan)', fontFamily: 'monospace', fontWeight: 600 }}>{st.stationId}</td>
+                    <td style={{ padding: '0.85rem', color: 'var(--text-primary)', fontWeight: 600 }}>{st.name}</td>
+                    <td style={{ padding: '0.85rem' }}>{st.chargerPowerKw} kW</td>
+                    <td style={{ padding: '0.85rem', color: 'var(--accent-cyan)' }}>₹{st.pricePerKwh} / kWh</td>
+                    <td style={{ padding: '0.85rem', color: 'var(--accent-green)', fontWeight: 700 }}>
+                      {st.availableChargers} / {st.totalChargers} Free
+                    </td>
+                    <td style={{ padding: '0.85rem' }}>{st.queueLength} waiting</td>
                   </tr>
                 ))
               )}

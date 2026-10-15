@@ -2,6 +2,14 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
+/**
+ * Pre-configured Axios instance for all API requests.
+ * - Base URL is read from `VITE_API_URL` env variable (falls back to `http://localhost:5000`).
+ * - Automatically attaches the JWT bearer token from `localStorage` on every request.
+ * - On a 401 response, clears all stored tokens so the user is treated as logged out.
+ *
+ * @type {import('axios').AxiosInstance}
+ */
 const client = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -9,6 +17,9 @@ const client = axios.create({
   }
 });
 
+/**
+ * Request interceptor — injects the stored JWT token as a Bearer header.
+ */
 client.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('ev_token');
@@ -20,6 +31,9 @@ client.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+/**
+ * Response interceptor — clears token storage when the server returns 401 Unauthorized.
+ */
 client.interceptors.response.use(
   (response) => response,
   (error) => {
