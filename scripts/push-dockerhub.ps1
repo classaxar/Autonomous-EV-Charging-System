@@ -1,29 +1,31 @@
 # push-dockerhub.ps1 - Automated Docker Hub Upload Script
-# Pushes all Autonomous EV System images to axar9408/<service>
+# Pushes all Autonomous EV System images to unified repository:
+# axar9408/autonomous-ev-charging-system:<service-tag>
 
 param (
     [string]$DockerUser = "axar9408",
+    [string]$RepoName = "autonomous-ev-charging-system",
     [string]$VersionTag = "v1.0"
 )
 
 Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host "🚀 Pushing Autonomous EV System Images to Docker Hub" -ForegroundColor Cyan
-Write-Host "   Target Account: $DockerUser" -ForegroundColor Yellow
-Write-Host "   Tags: latest, $VersionTag" -ForegroundColor Yellow
+Write-Host "🚀 Pushing Autonomous EV System Images to Unified Docker Hub" -ForegroundColor Cyan
+Write-Host "   Repository: $DockerUser/$RepoName" -ForegroundColor Yellow
+Write-Host "   Tags: <service>, <service>-$VersionTag" -ForegroundColor Yellow
 Write-Host "==========================================================" -ForegroundColor Cyan
 
 $services = @(
-    @{ Name = "frontend"; Local = "autonomous-ev-system-frontend:latest" },
-    @{ Name = "api-gateway"; Local = "autonomous-ev-system-api-gateway:latest" },
-    @{ Name = "auth-service"; Local = "autonomous-ev-system-auth-service:latest" },
-    @{ Name = "ev-service"; Local = "autonomous-ev-system-ev-service:latest" },
-    @{ Name = "station-service"; Local = "autonomous-ev-system-station-service:latest" },
-    @{ Name = "booking-service"; Local = "autonomous-ev-system-booking-service:latest" },
-    @{ Name = "decision-service"; Local = "autonomous-ev-system-decision-service:latest" },
-    @{ Name = "charging-service"; Local = "autonomous-ev-system-charging-service:latest" },
-    @{ Name = "payment-service"; Local = "autonomous-ev-system-payment-service:latest" },
-    @{ Name = "notification-service"; Local = "autonomous-ev-system-notification-service:latest" },
-    @{ Name = "analytics-service"; Local = "autonomous-ev-system-analytics-service:latest" }
+    "frontend",
+    "api-gateway",
+    "auth-service",
+    "ev-service",
+    "station-service",
+    "booking-service",
+    "decision-service",
+    "charging-service",
+    "payment-service",
+    "notification-service",
+    "analytics-service"
 )
 
 $total = $services.Count
@@ -31,28 +33,24 @@ $current = 0
 
 foreach ($svc in $services) {
     $current++
-    $name = $svc.Name
-    $local = $svc.Local
-    $remoteLatest = "$DockerUser/$name`:latest"
-    $remoteVer = "$DockerUser/$name`:$VersionTag"
+    $local = "autonomous-ev-system-$svc`:latest"
+    $remoteTag = "$DockerUser/$RepoName`:$svc"
+    $remoteVer = "$DockerUser/$RepoName`:$svc-$VersionTag"
 
-    Write-Host "`n[$current/$total] Processing $name..." -ForegroundColor Cyan
+    Write-Host "`n[$current/$total] Processing $svc..." -ForegroundColor Cyan
 
-    # Tag latest
-    Write-Host "  -> Tagging $local -> $remoteLatest" -ForegroundColor DarkGray
-    docker tag $local $remoteLatest
+    # Tag
+    Write-Host "  -> Tagging $local -> $remoteTag & $remoteVer" -ForegroundColor DarkGray
+    docker tag $local $remoteTag
     docker tag $local $remoteVer
 
-    # Push latest
-    Write-Host "  -> Pushing $remoteLatest..." -ForegroundColor Green
-    docker push $remoteLatest
-
-    # Push version tag
-    Write-Host "  -> Pushing $remoteVer..." -ForegroundColor Green
+    # Push
+    Write-Host "  -> Pushing $remoteTag..." -ForegroundColor Green
+    docker push $remoteTag
     docker push $remoteVer
 }
 
 Write-Host "`n==========================================================" -ForegroundColor Cyan
-Write-Host "🎉 All $total services successfully uploaded to Docker Hub!" -ForegroundColor Green
-Write-Host "   Verify at: https://hub.docker.com/u/$DockerUser" -ForegroundColor Yellow
+Write-Host "🎉 All $total services successfully uploaded to Unified Repository!" -ForegroundColor Green
+Write-Host "   Verify at: https://hub.docker.com/r/$DockerUser/$RepoName/tags" -ForegroundColor Yellow
 Write-Host "==========================================================" -ForegroundColor Cyan
