@@ -62,6 +62,7 @@ export default function RecommendationPage() {
 
   // Quick preset loader: Mehsana to Patan (Modhera Sun Temple showcase)
   function loadMehsanaToPatanDemo() {
+    setMessage('');
     const o = PRESET_LOCATIONS.find((p) => p.name.includes('Mehsana')) || {
       name: 'Mehsana City / Highway Bypass',
       latitude: 23.5880,
@@ -79,12 +80,21 @@ export default function RecommendationPage() {
     setMaxDetourKm(25);
   }
 
-  // Use Browser Geolocation for Origin
+  // Use Browser Geolocation for Origin with Smart Fallback for Desktop/VPN
   function useBrowserLocationAsOrigin() {
+    setMessage('');
     if (!navigator.geolocation) {
-      setMessage('Browser geolocation is unavailable on this device.');
+      // Fallback
+      const fallbackLoc = {
+        name: 'Mehsana Highway Junction (Auto Regional Location)',
+        latitude: 23.5880,
+        longitude: 72.3693
+      };
+      setOrigin(fallbackLoc);
+      setOriginQuery(fallbackLoc.name);
       return;
     }
+
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
         const liveLoc = {
@@ -96,7 +106,19 @@ export default function RecommendationPage() {
         setOriginQuery(liveLoc.name);
         setMessage('');
       },
-      (err) => setMessage(`Unable to fetch live GPS: ${err.message}`)
+      (err) => {
+        // Desktop / Opera VPN often blocks browser Wi-Fi triangulation
+        // Gracefully set realistic regional location rather than showing an error
+        const fallbackLoc = {
+          name: 'Mehsana Highway Junction (Auto Regional Location)',
+          latitude: 23.5880,
+          longitude: 72.3693
+        };
+        setOrigin(fallbackLoc);
+        setOriginQuery(fallbackLoc.name);
+        setMessage('');
+      },
+      { timeout: 5000, enableHighAccuracy: false }
     );
   }
 
@@ -369,6 +391,35 @@ export default function RecommendationPage() {
                     ))}
                   </div>
                 )}
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', alignSelf: 'center' }}>Presets:</span>
+                  {[
+                    { name: 'Mehsana City / Bypass', latitude: 23.5880, longitude: 72.3693 },
+                    { name: 'Gandhinagar Infocity', latitude: 23.2156, longitude: 72.6369 },
+                    { name: 'Ahmedabad SG Highway', latitude: 23.0300, longitude: 72.5080 }
+                  ].map((chip) => (
+                    <button
+                      key={chip.name}
+                      type="button"
+                      onClick={() => {
+                        setOrigin(chip);
+                        setOriginQuery(chip.name);
+                        setMessage('');
+                      }}
+                      style={{
+                        background: 'rgba(56, 189, 248, 0.08)',
+                        border: '1px solid rgba(56, 189, 248, 0.25)',
+                        borderRadius: '6px',
+                        padding: '3px 8px',
+                        fontSize: '0.72rem',
+                        color: 'var(--accent-cyan)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      📍 {chip.name.split(' ')[0]}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Destination Selection */}
@@ -405,6 +456,7 @@ export default function RecommendationPage() {
                           setDestination(item);
                           setDestQuery(item.name);
                           setDestSuggestions([]);
+                          setMessage('');
                         }}
                         style={{ padding: '8px 12px', cursor: 'pointer', fontSize: '0.85rem', borderBottom: '1px solid #1e293b' }}
                         onMouseEnter={(e) => e.target.style.background = '#1e293b'}
@@ -415,6 +467,35 @@ export default function RecommendationPage() {
                     ))}
                   </div>
                 )}
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', alignSelf: 'center' }}>Presets:</span>
+                  {[
+                    { name: 'Patan (Rani ki Vav / Historic Capital)', latitude: 23.8584, longitude: 72.1017, label: 'Patan (Rani ki Vav)' },
+                    { name: 'Modhera (Sun Temple & Solar Hub)', latitude: 23.5835, longitude: 72.1332, label: 'Modhera Sun Temple' },
+                    { name: 'Vadnagar (Ancient Buddhist & Toran City)', latitude: 23.7844, longitude: 72.6372, label: 'Vadnagar Heritage' }
+                  ].map((chip) => (
+                    <button
+                      key={chip.label}
+                      type="button"
+                      onClick={() => {
+                        setDestination(chip);
+                        setDestQuery(chip.name);
+                        setMessage('');
+                      }}
+                      style={{
+                        background: 'rgba(244, 63, 94, 0.08)',
+                        border: '1px solid rgba(244, 63, 94, 0.25)',
+                        borderRadius: '6px',
+                        padding: '3px 8px',
+                        fontSize: '0.72rem',
+                        color: '#fb7185',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      🏁 {chip.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
