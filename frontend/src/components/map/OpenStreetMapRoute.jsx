@@ -61,10 +61,10 @@ export default function OpenStreetMapRoute({
         attributionControl: true
       });
 
-      // OpenStreetMap Tiles (Carto Voyager / OpenStreetMap standard)
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      // Official OpenStreetMap Standard Tiles (100% Free, Public, Zero API Key Required)
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>'
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors'
       }).addTo(map);
 
       layerGroupRef.current = L.layerGroup().addTo(map);
