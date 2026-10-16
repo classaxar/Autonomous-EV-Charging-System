@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+// Uses relative path so frontend acts as unified gateway for any IP, domain, or device
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 /**
  * Pre-configured Axios instance for all API requests.

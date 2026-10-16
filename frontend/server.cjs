@@ -1,7 +1,12 @@
 const express = require('express');
 const path = require('path');
+const http = require('http');
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Upstream API Gateway
+const GATEWAY_HOST = process.env.API_GATEWAY_HOST || 'api-gateway';
+const GATEWAY_PORT = process.env.API_GATEWAY_PORT || 5000;
 
 app.get('/health', (req, res) => {
   res.status(200).json({
@@ -11,8 +16,41 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Proxy all /api requests to API Gateway
+app.use('/api', (clientReq, clientRes) => {
+  const options = {
+    hostname: GATEWAY_HOST,
+    port: GATEWAY_PORT,
+    path: '/api' + clientReq.url,
+    method: clientReq.method,
+    headers: {
+      ...clientReq.headers,
+      host: `${GATEWAY_HOST}:${GATEWAY_PORT}`
+    }
+  };
+
+  const proxyReq = http.request(options, (proxyRes) => {
+    clientRes.writeHead(proxyRes.statusCode, proxyRes.headers);
+    proxyRes.pipe(clientRes, { end: true });
+  });
+
+  proxyReq.on('error', (err) => {
+    console.error('[Frontend API Proxy Error]', err.message);
+    if (!clientRes.headersSent) {
+      clientRes.status(502).json({
+        success: false,
+        message: 'Unable to reach API Gateway. Please ensure backend services are running.'
+      });
+    }
+  });
+
+  clientReq.pipe(proxyReq, { end: true });
+});
+
+// Serve frontend static assets
 app.use(express.static(path.join(__dirname, 'dist')));
 
+// SPA fallback routing
 app.get('*', (req, res) => {
   const indexPath = path.join(__dirname, 'dist', 'index.html');
   res.sendFile(indexPath, (err) => {
@@ -39,6 +77,6 @@ app.get('*', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`[frontend] Listening on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`[frontend] Listening on port ${PORT} (0.0.0.0)`);
 });
