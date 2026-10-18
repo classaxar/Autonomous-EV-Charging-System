@@ -9,22 +9,31 @@
 [![Docker Hub](https://img.shields.io/badge/Docker%20Hub-axar9408%2Fautonomous--ev--charging--system-blue?style=for-the-badge&logo=docker)](https://hub.docker.com/r/axar9408/autonomous-ev-charging-system/tags)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-ev--system-326CE5?style=for-the-badge&logo=kubernetes)](infra/kubernetes/)
 [![React](https://img.shields.io/badge/Frontend-React%2018%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react)](frontend/)
-[![Author](https://img.shields.io/badge/Developer-Axar-orange?style=for-the-badge&logo=github)](https://github.com/classaxar)
 
 ---
 
 ## 📌 Executive Summary
 
-The **Autonomous EV Charging System** is an enterprise-grade cloud-native microservices platform designed to eliminate urban electric vehicle charging bottlenecks. Developed and engineered from the ground up, it autonomously connects electric vehicles with the most optimal charging stations through a multi-factor decision engine balancing real-time distance, charger speeds, dynamic pricing, queue times, and vehicle battery State of Charge (SoC).
+The **Autonomous EV Charging System** is an enterprise-grade distributed microservices platform designed to solve urban EV charging bottlenecks. It connects electric vehicles with charging stations through an autonomous multi-factor recommendation engine that balances distance, charging speeds, dynamic tariffs, queue length, and vehicle State of Charge (SoC).
 
 ### Key Highlights
-- **11 Microservices + React SPA**: Cleanly decoupled domain boundaries with independent, isolated MongoDB databases per service.
-- **Autonomous Decision Engine**: Deterministic Multi-Criteria Decision Algorithm (MCDA) with priority boosting for critically depleted batteries.
-- **Interactive Live Map & GPS Routing**: Real-time Leaflet map with GPS tracking, destination routing, and station discovery.
-- **Unified Docker Hub Distribution**: All 11 microservices published under a single project umbrella: [`axar9408/autonomous-ev-charging-system`](https://hub.docker.com/r/axar9408/autonomous-ev-charging-system/tags).
+- **11 Microservices + React SPA**: Cleanly decoupled domain boundaries with isolated MongoDB databases per service.
+- **Autonomous Decision Engine**: Deterministic multi-criteria decision algorithm (MCDA) with priority boosting for depleted batteries.
+- **Interactive Live Map & Real-Time Tracking**: GPS fallback, simulated live EV charging curves (`SIM_SPEEDUP`), and interactive routing.
+- **Unified Docker Hub Distribution**: All 11 microservices packaged under a single repository roof: [`axar9408/autonomous-ev-charging-system`](https://hub.docker.com/r/axar9408/autonomous-ev-charging-system/tags).
 - **Dual Security Model**: Public routes protected by JWT (`HS256`); internal service-to-service calls secured via `x-internal-key`.
-- **Live Battery Simulation Engine**: Real-time charging simulation with physics-based battery ramp curves and configurable acceleration (`SIM_SPEEDUP`).
-- **Production-Ready Orchestration**: Docker Compose, instant Docker Hub pulling (`docker-compose.hub.yml`), and full Kubernetes manifests with HPA auto-scaling.
+- **Zero-Interference Team Ownership**: Structured 3-person team distribution (Platform, Core Domain, Intelligence).
+- **Production-Ready Orchestration**: Docker Compose, Docker Hub instant pull, and Kubernetes manifests with HPA auto-scaling.
+
+---
+
+## 📸 System & Container Screenshots
+
+### 1. Docker Desktop — All 12 Microservices Running in Containers
+![Docker Desktop Microservices Running](docs/screenshots/docker-desktop-containers.png)
+
+### 2. System Architecture & Flow
+![System Overview](docs/screenshots/system-overview.png)
 
 ---
 
@@ -40,18 +49,18 @@ flowchart TB
         GW["API Gateway\n(Rate Limiter, Reverse Proxy, Central Envelope, Blocks /internal)"]
     end
 
-    subgraph Platform["Platform & Security Services"]
+    subgraph Platform["Person 1: Platform & Foundation"]
         AUTH["auth-service :5001\n(JWT HS256, Bcrypt, RBAC)"]
-        NOTIF["notification-service :5008\n(Real-Time Alerts & Notification Logs)"]
+        NOTIF["notification-service :5008\n(Real-Time Alerts & Events)"]
     end
 
-    subgraph CoreDomain["Core Fleet & Station Domain"]
+    subgraph CoreDomain["Person 2: Web Structure, Docker & Maps"]
         EV["ev-service :5002\n(Vehicle Specs & Battery SoC)"]
         STATION["station-service :5003\n(Stations, Slots & Geo-Coordinates)"]
         BOOKING["booking-service :5004\n(Reservations & Slot Locking)"]
     end
 
-    subgraph Intelligence["Decision Intelligence & Billing"]
+    subgraph Intelligence["Person 3: Decision Engine, Simulation & K8s"]
         DECISION["decision-service :5005\n(Stateless MCDA Ranking Algorithm)"]
         CHARGING["charging-service :5006\n(Simulation & Battery Ramp Curve)"]
         PAYMENT["payment-service :5007\n(Dynamic Tariffs & Invoicing)"]
@@ -78,21 +87,31 @@ flowchart TB
 
 ---
 
-## 🧭 Microservices Directory
+## 👥 3-Person Team Division of Work
 
-| Service | Directory | Port | Database | Domain & Core Responsibilities |
+| Team Member | Role & Focus | Key Deliverables & Responsibilities |
+|---|---|---|
+| **Person 1** | **Platform & Foundation** *(Beginner-Friendly)* | • `auth-service` (User registration, login, JWT HS256, Bcrypt password hashing)<br>• `notification-service` (User alerts, system updates)<br>• MongoDB connection and environment setup |
+| **Person 2** | **Website Structure, Docker & Interactive Map** | • React 18 + Vite Frontend SPA (Dashboard, dark UI, responsive layout)<br>• Interactive Leaflet/OpenStreetMap integration with GPS routing<br>• `ev-service`, `station-service`, `booking-service`<br>• Docker Hub publishing & Docker Compose configuration |
+| **Person 3** | **Decision Intelligence, Simulation & Kubernetes** | • `decision-service` (Multi-criteria ranking: distance, price, power, queue, SoC)<br>• `charging-service` (Simulated battery charging curves & ramp-up)<br>• `payment-service` & `analytics-service`<br>• Kubernetes manifests (Deployments, Services, ConfigMaps, Secrets, HPA) |
+
+---
+
+## 🧭 Service Directory & Ports
+
+| Service | Directory | Port | Database | Description |
 |---|---|---|---|---|
-| **frontend** | `frontend/` | **3000** | *None* | React 18 + Vite SPA, Leaflet OpenStreetMap, GPS routing, dark dashboard |
-| **api-gateway** | `services/api-gateway/` | **5000** | *None* | Reverse proxy, rate limiting (100 req/min), route security & error standardizer |
-| **auth-service** | `services/auth-service/` | **5001** | `auth_db` | User identity, RBAC (`SYSTEM_ADMIN`, `USER`), password hashing (Bcrypt), JWT |
-| **ev-service** | `services/ev-service/` | **5002** | `ev_db` | EV fleet management, telemetry, battery capacity, current SoC |
-| **station-service** | `services/station-service/` | **5003** | `station_db` | Charging station directory, chargers, slot states (`FREE\|BOOKED\|CHARGING`) |
-| **booking-service** | `services/booking-service/` | **5004** | `booking_db` | Slot reservations, queue management, cancellation lifecycles |
-| **decision-service** | `services/decision-service/` | **5005** | *None* | Autonomous multi-criteria ranking algorithm (Haversine distance, speed, price, queue) |
-| **charging-service** | `services/charging-service/` | **5006** | `charging_db` | Live charging session simulation with battery power ramp curve & speedup |
-| **payment-service** | `services/payment-service/` | **5007** | `payment_db` | Billing calculations (`energyKwh * tariff`), invoicing, payment checkout |
-| **notification-service** | `services/notification-service/` | **5008** | `notification_db`| In-app event alerts, booking updates, and notification history |
-| **analytics-service** | `services/analytics-service/` | **5009** | `analytics_db` | Fleet intelligence, daily power consumption, revenue, and utilization stats |
+| **frontend** | `frontend/` | **3000** | *None* | React 18 + Vite SPA, Leaflet map, GPS routing |
+| **api-gateway** | `services/api-gateway/` | **5000** | *None* | Reverse proxy, rate limiting, route guard |
+| **auth-service** | `services/auth-service/` | **5001** | `auth_db` | User auth, roles (`SYSTEM_ADMIN`, `USER`), JWT |
+| **ev-service** | `services/ev-service/` | **5002** | `ev_db` | Vehicle telemetry, SoC, battery capacity |
+| **station-service** | `services/station-service/` | **5003** | `station_db` | Station registry, slot state (`FREE\|BOOKED\|CHARGING`) |
+| **booking-service** | `services/booking-service/` | **5004** | `booking_db` | Slot reservations, queue management, cancellation |
+| **decision-service** | `services/decision-service/` | **5005** | *None* | Autonomous multi-criteria station recommendation |
+| **charging-service** | `services/charging-service/` | **5006** | `charging_db` | Live charging session simulation with speedup |
+| **payment-service** | `services/payment-service/` | **5007** | `payment_db` | Invoice computation (`energyKwh * tariff`), checkout |
+| **notification-service** | `services/notification-service/` | **5008** | `notification_db`| In-app notification logs and user alerts |
+| **analytics-service** | `services/analytics-service/` | **5009** | `analytics_db` | System revenue, energy consumption, and fleet analytics |
 
 ---
 
@@ -102,16 +121,16 @@ Pre-seeded accounts ready for immediate demonstration:
 
 | Role | Email | Password | Access Privileges |
 |---|---|---|---|
-| **System Admin** | `admin@ev.com` | `Admin@123` | Full access to Admin Dashboard, Analytics, Fleet, Stations, and Global Queues |
-| **EV Driver / User** | `user@ev.com` | `User@123` | Route planner, slot reservation, charging simulator, and payment checkout |
+| **System Admin** | `admin@ev.com` | `Admin@123` | Full access to Admin Dashboard, Analytics, Fleet, Stations |
+| **EV Driver / User** | `user@ev.com` | `User@123` | Route planner, slot reservation, charging simulator, payments |
 
 ---
 
 ## 🚀 Running the System
 
-### Option 1: Instant Run from Docker Hub (Fastest — No Source Build Required)
+### Option 1: Instant Run from Docker Hub (Fastest — No Build Required)
 
-All 11 microservices are pre-built, tested, and published to Docker Hub under [`axar9408/autonomous-ev-charging-system`](https://hub.docker.com/r/axar9408/autonomous-ev-charging-system/tags).
+All 11 microservices are pre-built and published to Docker Hub under [`axar9408/autonomous-ev-charging-system`](https://hub.docker.com/r/axar9408/autonomous-ev-charging-system/tags).
 
 ```bash
 # Pull and start all 11 microservices + MongoDB with one command:
@@ -186,13 +205,13 @@ kubectl get pods -n ev-system -w
 minikube service frontend -n ev-system
 ```
 
-*(See [scripts/k8s-demo.md](scripts/k8s-demo.md) for automated chaos testing, pod scaling, and self-healing demos).*
+*(See [scripts/k8s-demo.md](scripts/k8s-demo.md) for automated chaos testing, pod scaling, and recovery demos).*
 
 ---
 
 ## 🐳 Docker Hub Unified Repository
 
-All 11 microservices are hosted under one single repository on Docker Hub:
+All 11 microservices are hosted under one unified repository:
 👉 **[https://hub.docker.com/r/axar9408/autonomous-ev-charging-system/tags](https://hub.docker.com/r/axar9408/autonomous-ev-charging-system/tags)**
 
 | Service | Tagged Image in Unified Repo |
@@ -211,19 +230,18 @@ All 11 microservices are hosted under one single repository on Docker Hub:
 
 ---
 
+## 📚 Documentation & Project Report
+
+- 📄 **Comprehensive Word Report (`.docx`)**: Located at [`docs/Autonomous_EV_Charging_System_Report.docx`](docs/Autonomous_EV_Charging_System_Report.docx) — includes system design, Docker Desktop screenshots, database schemas, and team breakdown.
+- 📋 **Architecture Details**: Located at [`docs/architecture.md`](docs/architecture.md).
+
+---
+
 ## 🔒 Security Architecture
 
 - **Public Traffic**: Authenticated via JWT bearer tokens (`HS256`) checked at the API Gateway.
 - **Service-to-Service**: Internal routes (`/internal/*`) blocked from external callers and secured using `x-internal-key`.
-- **Standardized Response Envelope**: Every response adheres strictly to the envelope standard: `{ "success": boolean, "data": ..., "message": "..." }`.
-
----
-
-## 👨‍💻 Author & Developer
-
-**Developed and engineered by Axar**
-- **GitHub:** [@classaxar](https://github.com/classaxar)
-- **Docker Hub:** [axar9408](https://hub.docker.com/u/axar9408)
+- **Envelope Response Format**: Every response adheres strictly to the envelope standard: `{ "success": boolean, "data": ..., "message": "..." }`.
 
 ---
 
